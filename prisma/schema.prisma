@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  fullName  String?
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  adminRole String?  @default("ALL")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  icon        String?
+  description String?
+  createdAt   DateTime @default(now())
+  items       Item[]
+}
+
+model Item {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String
+  categoryId   String
+  currentPrice Float         @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  category     Category      @relation(fields: [categoryId], references: [id])
+  prices       PriceRecord[]
+
+  @@unique([slug, categoryId])
+}
+
+model PriceRecord {
+  id        String   @id @default(cuid())
+  itemId    String
+  price     Float
+  timestamp DateTime @default(now())
+  updatedBy String?
+  item      Item     @relation(fields: [itemId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminEmail String
+  action     String
+  details    String?
+  timestamp  DateTime @default(now())
+}
