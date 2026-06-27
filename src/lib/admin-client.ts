@@ -68,33 +68,31 @@ export async function parseAdminJson<T = unknown>(
   }
 }
 
-/** Re-issue session cookie when localStorage exists but cookie expired/missing. */
-export async function ensureAdminSession(storedUser: {
+/** Verify admin session via HttpOnly cookie — never restore without password. */
+export async function verifyAdminAuth(): Promise<{
   id: string;
   email: string;
-}): Promise<boolean> {
-  const me = await parseAdminJson<{ user?: unknown }>(
+  fullName: string | null;
+  isAdmin: boolean;
+  adminRole: string;
+} | null> {
+  const me = await parseAdminJson<{ user?: {
+    id: string;
+    email: string;
+    fullName: string | null;
+    isAdmin: boolean;
+    adminRole: string;
+  } }>(
     await adminFetch("/api/auth/me", { cache: "no-store" })
   );
-  if (me.ok) return true;
-
-  const refresh = await parseAdminJson<{ user?: unknown }>(
-    await adminFetch("/api/auth/refresh-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: storedUser.id,
-        email: storedUser.email,
-      }),
-    })
-  );
-
-  if (refresh.ok && refresh.data?.user) {
-    localStorage.setItem("user", JSON.stringify(refresh.data.user));
-    return true;
+  if (me.ok && me.data?.user?.isAdmin) {
+    localStorage.setItem("user", JSON.stringify(me.data.user));
+    return me.data.user;
   }
-
-  return false;
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("user");
+  }
+  return null;
 }
 
 export async function adminLogout() {

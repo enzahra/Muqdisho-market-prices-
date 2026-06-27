@@ -31,14 +31,19 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10)
 
-    const validRoles = ['ALL', 'animals', 'water', 'electricity']
-    if (!adminRole || !validRoles.includes(adminRole)) {
+    if (!adminRole || String(adminRole).trim() === '') {
       return NextResponse.json(
         { error: 'Admin role is required. Create admins from User Management (super admin only).' },
         { status: 403 }
       )
     }
     const resolvedRole = normalizeAdminRole(adminRole)
+    if (resolvedRole !== 'ALL' && !['animals', 'water', 'electricity'].some((r) => resolvedRole.includes(r))) {
+      return NextResponse.json(
+        { error: 'Admin role is invalid. Use ALL or one/more of: animals, water, electricity.' },
+        { status: 403 }
+      )
+    }
 
     const user = await prisma.user.create({
       data: {

@@ -4,12 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "predev": "node -e \"const fs=require('fs');const path=require('path');const rm=(p)=>{try{fs.rmSync(p,{recursive:true,force:true})}catch(e){}};rm('.next/dev/lock');rm('.next/dev/cache');\"",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:backup": "node backup-db.js --verify",
+    "db:push": "prisma db push",
     "db:restore": "node restore-db.js",
     "db:seed": "npx prisma db seed",
+    "db:seed-livestock": "node prisma/seed-livestock.js",
     "db:super-admin": "node scripts/ensure-super-admin.js"
   },
   "dependencies": {
@@ -23,7 +27,8 @@
     "prisma": "^7.6.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

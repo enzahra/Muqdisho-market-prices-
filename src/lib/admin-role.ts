@@ -9,31 +9,59 @@ export function categorySlugForRoleCheck(slug: string): string {
   return s;
 }
 
+/** Parse stored adminRole — supports single slug, comma-separated slugs, or ALL. */
+export function parseAdminRoles(role: unknown): string[] {
+  if (role == null || String(role).trim() === "") return ["ALL"];
+  const raw = String(role).trim();
+  if (raw.toUpperCase() === "ALL") return ["ALL"];
+  const parts = raw
+    .split(",")
+    .map((r) => r.trim().toLowerCase())
+    .filter((r) => ADMIN_CATEGORY_ROLES.includes(r as AdminCategoryRole));
+  return parts.length > 0 ? [...new Set(parts)] : ["ALL"];
+}
+
+/** Encode role list for DB storage (sorted, deduped). */
+export function encodeAdminRoles(roles: string[]): string {
+  const normalized = [...new Set(roles.map((r) => r.trim().toLowerCase()))];
+  if (normalized.includes("all") || normalized.length === 0) return "ALL";
+  const valid = normalized.filter((r) =>
+    ADMIN_CATEGORY_ROLES.includes(r as AdminCategoryRole)
+  );
+  if (valid.length === 0) return "ALL";
+  return valid.sort().join(",");
+}
+
+export function getAdminNavCategories(role: unknown): AdminCategoryRole[] {
+  const roles = parseAdminRoles(role);
+  if (roles.includes("ALL")) return [...ADMIN_CATEGORY_ROLES];
+  return roles.filter((r): r is AdminCategoryRole =>
+    ADMIN_CATEGORY_ROLES.includes(r as AdminCategoryRole)
+  );
+}
+
 export function canAdminModifyCategory(adminRole: string, categorySlug: string): boolean {
-  const role = normalizeAdminRole(adminRole);
-  const cat = categorySlugForRoleCheck(categorySlug);
-  return role === "ALL" || role === cat;
+  return canAccessCategory(adminRole, categorySlug);
 }
 
 /** Primary super admin — cannot be demoted, deleted, or downgraded. */
 export const PRIMARY_SUPER_ADMIN_EMAIL = "super@admin.com";
 
-/** Normalize admin role for URL and guards (ALL vs category slugs). */
+/** Normalize admin role for storage and guards. */
 export function normalizeAdminRole(role: unknown): string {
-  if (role == null || String(role).trim() === "") return "ALL";
-  const s = String(role).trim();
-  if (s.toUpperCase() === "ALL") return "ALL";
-  return s.toLowerCase();
+  return encodeAdminRoles(parseAdminRoles(role));
 }
 
 export function isSuperAdmin(role: unknown): boolean {
-  return normalizeAdminRole(role) === "ALL";
+  const roles = parseAdminRoles(role);
+  return roles.length === 1 && roles[0] === "ALL";
 }
 
 export function canAccessCategory(role: unknown, categorySlug: string): boolean {
-  const normalized = normalizeAdminRole(role);
-  const slug = (categorySlug || "").toLowerCase();
-  return normalized === "ALL" || normalized === slug;
+  const roles = parseAdminRoles(role);
+  if (roles.includes("ALL")) return true;
+  const cat = categorySlugForRoleCheck(categorySlug);
+  return roles.includes(cat);
 }
 
 export function isPrimarySuperAdminEmail(email: unknown): boolean {
@@ -55,10 +83,10 @@ export function isAdminAccount(user: {
   if (user.isAdmin === false) return false;
   const role = user.adminRole;
   if (role == null || String(role).trim() === "") return false;
-  const normalized = normalizeAdminRole(role);
+  const roles = parseAdminRoles(role);
   return (
-    normalized === "ALL" ||
-    ADMIN_CATEGORY_ROLES.includes(normalized as AdminCategoryRole)
+    roles.includes("ALL") ||
+    roles.some((r) => ADMIN_CATEGORY_ROLES.includes(r as AdminCategoryRole))
   );
 }
 

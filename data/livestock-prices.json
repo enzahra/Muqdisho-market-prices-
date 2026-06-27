@@ -1,0 +1,306 @@
+{
+  "meta": {
+    "source": "Excel upload",
+    "uploadedAt": "2026-03-25T18:10:37.151Z",
+    "itemOrder": {
+      "geel": [
+        "Hal",
+        "Awr",
+        "Baarqab",
+        "GURBAC",
+        "NIRIG",
+        "QALIN",
+        "QAALIN"
+      ],
+      "lo": [
+        "Sac",
+        "Dibi",
+        "WEYL",
+        "QAALIN"
+      ],
+      "ari": [
+        "Wan",
+        "Lax",
+        "AYSAN",
+        "ORGI",
+        "NEYL",
+        "RI"
+      ]
+    }
+  },
+  "categories": [
+    {
+      "slug": "geel",
+      "name": "Geel (Camels)",
+      "items": [
+        {
+          "name": "Hal",
+          "birimo": {
+            "xagaa": 950,
+            "gu": 1500,
+            "dayr": 1600,
+            "jiilaal": 1200
+          },
+          "sugunto": {
+            "gu": 900,
+            "xagaa": 850,
+            "dayr": 700,
+            "jiilaal": 750
+          }
+        },
+        {
+          "name": "Awr",
+          "birimo": {
+            "gu": 2500,
+            "xagaa": 2200,
+            "dayr": 2700,
+            "jiilaal": 2000
+          },
+          "sugunto": {
+            "gu": 1200,
+            "xagaa": 800,
+            "dayr": 8500,
+            "jiilaal": 700
+          }
+        },
+        {
+          "name": "Baarqab",
+          "birimo": {
+            "gu": 850,
+            "xagaa": 800,
+            "dayr": 820,
+            "jiilaal": 900
+          },
+          "sugunto": {
+            "gu": 1100,
+            "xagaa": 1000,
+            "dayr": 1050,
+            "jiilaal": 1150
+          }
+        },
+        {
+          "name": "GURBAC",
+          "birimo": {
+            "gu": 500,
+            "xagaa": 400,
+            "dayr": 550,
+            "jiilaal": 300
+          },
+          "sugunto": {
+            "gu": 400,
+            "xagaa": 300,
+            "dayr": 450,
+            "jiilaal": 200
+          }
+        },
+        {
+          "name": "NIRIG",
+          "birimo": {
+            "gu": 400,
+            "xagaa": 350,
+            "dayr": 450,
+            "jiilaal": 300
+          },
+          "sugunto": {
+            "gu": 300,
+            "xagaa": 250,
+            "dayr": 350,
+            "jiilaal": 200
+          }
+        },
+        {
+          "name": "QALIN",
+          "birimo": {
+            "gu": 700,
+            "xagaa": 650,
+            "dayr": 750,
+            "jiilaal": 600
+          },
+          "sugunto": {
+            "gu": 500,
+            "xagaa": 450,
+            "dayr": 550,
+            "jiilaal": 400
+          }
+        },
+        {
+          "name": "QAALIN",
+          "birimo": {
+            "gu": 600,
+            "xagaa": 550,
+            "dayr": 650,
+            "jiilaal": 500
+          },
+          "sugunto": {
+            "gu": 500,
+            "xagaa": 450,
+            "dayr": 550,
+            "jiilaal": 400
+          }
+        }
+      ]
+    },
+    {
+      "slug": "lo",
+      "name": "Lo'da (Cattle)",
+      "items": [
+        {
+          "name": "Sac",
+          "birimo": {
+            "gu": 400,
+            "xagaa": 350,
+            "dayr": 450,
+            "jiilaal": 300
+          },
+          "sugunto": {
+            "gu": 420,
+            "xagaa": 400,
+            "dayr": 410,
+            "jiilaal": 450
+          }
+        },
+        {
+          "name": "Dibi",
+          "birimo": {
+            "gu": 500,
+            "xagaa": 450,
+            "dayr": 550,
+            "jiilaal": 400
+          },
+          "sugunto": {
+            "gu": 500,
+            "xagaa": 450,
+            "dayr": 480,
+            "jiilaal": 520
+          }
+        },
+        {
+          "name": "WEYL",
+          "birimo": {
+            "gu": 400,
+            "xagaa": 350,
+            "dayr": 450,
+            "jiilaal": 350
+          },
+          "sugunto": {
+            "gu": 300,
+            "xagaa": 280,
+            "dayr": 350,
+            "jiilaal": 250
+          }
+        },
+        {
+          "name": "QAALIN",
+          "birimo": {
+            "gu": 900,
+            "xagaa": 800,
+            "dayr": 950,
+            "jiilaal": 800
+          },
+          "sugunto": {
+            "gu": 700,
+            "xagaa": 650,
+            "dayr": 800,
+            "jiilaal": 600
+          }
+        }
+      ]
+    },
+    {
+      "slug": "ari",
+      "name": "Ariga (Goat/Sheep)",
+      "items": [
+        {
+          "name": "Wan",
+          "birimo": {
+            "gu": 180,
+            "xagaa": 170,
+            "dayr": 200,
+            "jiilaal": 150
+          },
+          "sugunto": {
+            "gu": 100,
+            "xagaa": 90,
+            "dayr": 95,
+            "jiilaal": 110
+          }
+        },
+        {
+          "name": "Lax",
+          "birimo": {
+            "gu": 125,
+            "xagaa": 120,
+            "dayr": 160,
+            "jiilaal": 100
+          },
+          "sugunto": {
+            "gu": 100,
+            "xagaa": 90,
+            "dayr": 95,
+            "jiilaal": 110
+          }
+        },
+        {
+          "name": "AYSAN",
+          "birimo": {
+            "gu": 100,
+            "xagaa": 95,
+            "dayr": 110,
+            "jiilaal": 90
+          },
+          "sugunto": {
+            "gu": 100,
+            "xagaa": 90,
+            "dayr": 95,
+            "jiilaal": 110
+          }
+        },
+        {
+          "name": "ORGI",
+          "birimo": {
+            "gu": 115,
+            "xagaa": 110,
+            "dayr": 130,
+            "jiilaal": 100
+          },
+          "sugunto": {
+            "gu": 100,
+            "xagaa": 90,
+            "dayr": 110,
+            "jiilaal": 90
+          }
+        },
+        {
+          "name": "NEYL",
+          "birimo": {
+            "gu": 130,
+            "xagaa": 120,
+            "dayr": 140,
+            "jiilaal": 120
+          },
+          "sugunto": {
+            "gu": 110,
+            "xagaa": 100,
+            "dayr": 120,
+            "jiilaal": 100
+          }
+        },
+        {
+          "name": "RI",
+          "birimo": {
+            "gu": 150,
+            "xagaa": 140,
+            "dayr": 160,
+            "jiilaal": 140
+          },
+          "sugunto": {
+            "gu": 130,
+            "xagaa": 120,
+            "dayr": 140,
+            "jiilaal": 120
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
                 System Access
               </h1>
               <p className="text-sky-300/90 text-xs tracking-[0.2em] uppercase font-black">
-                Secure Administrator Interface
+                Geli email-kaaga iyo password-kaaga
               </p>
             </div>
 
@@ -134,7 +134,7 @@ export default function AdminLoginPage() {
                   readOnly={!emailFieldReady}
                   onFocus={() => setEmailFieldReady(true)}
                   className="peer w-full bg-white/[0.08] border border-white/15 text-white placeholder-transparent text-[0.85rem] rounded-2xl py-3 h-[60px] focus:outline-none focus:ring-2 focus:ring-sky-400/40 focus:border-sky-400/50 focus:bg-white/[0.12] transition-all font-medium shadow-lg shadow-black/10"
-                  placeholder="Admin Email"
+                  placeholder="Email-kaaga"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -150,7 +150,7 @@ export default function AdminLoginPage() {
                     color: email ? '#7dd3fc' : '#cbd5e1'
                   }}
                 >
-                  Admin Email
+                  Admin Email (Email-kaaga)
                 </label>
               </div>
 
@@ -163,7 +163,7 @@ export default function AdminLoginPage() {
                   data-lpignore="true"
                   data-1p-ignore="true"
                   className="peer w-full bg-white/[0.08] border border-white/15 text-white placeholder-transparent text-[0.85rem] rounded-2xl py-3 h-[60px] focus:outline-none focus:ring-2 focus:ring-sky-400/40 focus:border-sky-400/50 focus:bg-white/[0.12] transition-all font-medium tracking-widest shadow-lg shadow-black/10 pr-14"
-                  placeholder="Security Key"
+                  placeholder="Password-kaaga"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -179,7 +179,7 @@ export default function AdminLoginPage() {
                     color: password ? '#7dd3fc' : '#cbd5e1'
                   }}
                 >
-                  Security Key
+                  Password-kaaga
                 </label>
                 <button
                   type="button"
@@ -239,3 +239,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+ 

@@ -1,7 +1,12 @@
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+const connectionString = process.env.DATABASE_URL
+const pool = new Pool({ connectionString })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
 
 const SUPER_ADMIN_EMAIL = 'super@admin.com'
 const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin123!'
@@ -11,9 +16,9 @@ async function main() {
   const categories = [
     { 
       slug: 'animals', 
-      name: 'Sicirka Xoolaha', 
+      name: 'Sicirka xoolaha', 
       icon: '🐄', 
-      description: 'Sicirka rasmiga ah ee xoolaha',
+      description: '',
       items: ['Geel (Camel)', "Lo' (Cattle)", 'Ari (Goat/Sheep)']
     },
     { 
@@ -27,7 +32,7 @@ async function main() {
       slug: 'electricity', 
       name: 'Sicirka Korontada', 
       icon: '⚡', 
-      description: 'Sicirka rasmiga ah ee korontada magaalada',
+      description: '',
       items: ['Shirkada Korontada Muqdisho', 'Shirkada Korontada Beco', 'Shirkada Korontada Blue Sky']
     }
   ]
@@ -35,7 +40,7 @@ async function main() {
   for (const cat of categories) {
     const category = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: { name: cat.name },
+      update: { name: cat.name, description: cat.description },
       create: {
         slug: cat.slug,
         name: cat.name,

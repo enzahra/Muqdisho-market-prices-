@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,20 +8,41 @@ import {
   isSuperAdmin,
   isProtectedSuperAdmin,
   isPrimarySuperAdminEmail,
-  isAdminAccount,
+  parseAdminRoles,
+  encodeAdminRoles,
 } from "@/lib/admin-role";
-import { adminFetch, adminLogout, parseAdminJson, ensureAdminSession } from "@/lib/admin-client";
+import { adminFetch, adminLogout, parseAdminJson, verifyAdminAuth } from "@/lib/admin-client";
 
-const ROLE_OPTIONS = [
+const SINGLE_ROLE_OPTIONS = [
   { value: "ALL",         label: "Dhammaan Qaybaha",   icon: "🌐" },
   { value: "animals",     label: "Xoolaha kaliya",      icon: "🐄" },
   { value: "water",       label: "Biyaha kaliya",       icon: "💧" },
   { value: "electricity", label: "Korontada kaliya",    icon: "⚡" },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  ALL: "🌐 Dhammaan Qaybaha",
+  animals: "🐄 Xoolaha kaliya",
+  water: "💧 Biyaha kaliya",
+  electricity: "⚡ Korontada kaliya",
+};
+
 function roleLabel(role: string | null) {
-  const found = ROLE_OPTIONS.find(r => r.value === role);
-  return found ? `${found.icon} ${found.label}` : role ?? "—";
+  if (!role) return "—";
+  const roles = parseAdminRoles(role);
+  if (roles.includes("ALL")) return ROLE_LABELS.ALL;
+  return roles.map((r) => ROLE_LABELS[r] || r).join(" + ");
+}
+
+function pendingRolesSummary(roles: string[]) {
+  if (roles.includes("ALL")) return ROLE_LABELS.ALL;
+  if (roles.length === 0) return "Dooro doorka...";
+  return roles
+    .map((r) => {
+      const opt = SINGLE_ROLE_OPTIONS.find((o) => o.value === r);
+      return opt ? `${opt.icon} ${opt.label.replace(" kaliya", "")}` : r;
+    })
+    .join(", ");
 }
 
 export default function UserManagementPage() {
@@ -42,30 +63,51 @@ export default function UserManagementPage() {
   const [showPwd,        setShowPwd]        = useState(false);
 
   // --- Inline role-change state ---
-  const [editingRole, setEditingRole]   = useState<string | null>(null); // userId
-  const [pendingRole, setPendingRole]   = useState("ALL");
+  const [editingRole, setEditingRole] = useState<string | null>(null);
+  const [pendingRoles, setPendingRoles] = useState<string[]>(["ALL"]);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) { router.push("/admin-login"); return; }
-
-    const user = JSON.parse(storedUser);
-    if (!isAdminAccount(user) || !isSuperAdmin(user.adminRole)) {
-      localStorage.removeItem("user");
-      router.push("/admin-login?error=Koontadaada%20ma%20laha%20xuquuqda%20Admin-ka.%20Fadlan%20ku%20gal%20akoon%20Admin%20ah.");
+  const togglePendingRole = (value: string) => {
+    if (value === "ALL") {
+      setPendingRoles(["ALL"]);
       return;
     }
-    setCurrentUser(user);
+    setPendingRoles((prev) => {
+      if (prev.includes("ALL")) return [value];
+      if (prev.includes(value)) return prev.filter((r) => r !== value);
+      if (prev.length >= 2) {
+        flash("Dooro ugu badnaan 2 qaybood.", "err");
+        return prev;
+      }
+      return [...prev, value];
+    });
+  };
+
+  useEffect(() => {
+    if (!roleDropdownOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target as Node)) {
+        setRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [roleDropdownOpen]);
+
+  useEffect(() => {
     (async () => {
-      const sessionOk = await ensureAdminSession(user);
-      if (!sessionOk) {
-        localStorage.removeItem("user");
-        router.push(
-          "/admin-login?error=" +
-            encodeURIComponent("Session-ka wuu dhacay. Fadlan mar kale ku gal.")
-        );
+      const authed = await verifyAdminAuth();
+      if (!authed) {
+        router.push("/admin-login?error=" + encodeURIComponent("Fadlan geli email-kaaga iyo password-kaaga."));
         return;
       }
+      if (!isSuperAdmin(authed.adminRole)) {
+        localStorage.removeItem("user");
+        router.push("/admin-login?error=Koontadaada%20ma%20laha%20xuquuqda%20Admin-ka.%20Fadlan%20ku%20gal%20akoon%20Admin%20ah.");
+        return;
+      }
+      setCurrentUser(authed);
       fetchUsers();
     })();
   }, [router]);
@@ -133,11 +175,17 @@ export default function UserManagementPage() {
   // --- Update role of existing user ---
   const applyRoleChange = async (
     userId: string,
-    newRole: string,
     targetUser: { email?: string }
   ) => {
     if (isProtectedSuperAdmin(targetUser)) {
       flash("Super admin-ka doorkiisa lama beddeli karo.", "err");
+      return;
+    }
+    const newRole = pendingRoles.includes("ALL")
+      ? "ALL"
+      : encodeAdminRoles(pendingRoles);
+    if (!pendingRoles.includes("ALL") && pendingRoles.length === 0) {
+      flash("Dooro ugu yaraan hal qayb ama Dhammaan Qaybaha.", "err");
       return;
     }
     try {
@@ -150,6 +198,7 @@ export default function UserManagementPage() {
       if (!result.ok) throw new Error(result.error || "Waa ku fashilantay");
       flash("✅ Doorka waa la cusboonaysiiyay!");
       setEditingRole(null);
+      setRoleDropdownOpen(false);
       fetchUsers();
     } catch (err: any) { flash(err.message, "err"); }
   };
@@ -296,7 +345,7 @@ export default function UserManagementPage() {
                 <div className="form-group">
                   <label>Doorka Adminka <span className="req">*</span></label>
                   <div className="role-grid">
-                    {ROLE_OPTIONS.map(opt => (
+                    {SINGLE_ROLE_OPTIONS.map(opt => (
                       <button
                         key={opt.value} type="button"
                         className={`role-chip ${createRole === opt.value ? "active" : ""}`}
@@ -358,19 +407,40 @@ export default function UserManagementPage() {
                   <td>
                     {editingRole === user.id ? (
                       <div className="inline-role-editor">
-                        <select
-                          value={pendingRole}
-                          onChange={e => setPendingRole(e.target.value)}
-                          className="role-select"
-                        >
-                          {ROLE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.icon} {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                        <button className="btn-save-role" onClick={() => applyRoleChange(user.id, pendingRole, user)}>✓</button>
-                        <button className="btn-cancel-role" onClick={() => setEditingRole(null)}>✕</button>
+                        <div className="role-dropdown" ref={roleDropdownRef}>
+                          <button
+                            type="button"
+                            className="role-select-trigger"
+                            onClick={() => setRoleDropdownOpen((v) => !v)}
+                            aria-expanded={roleDropdownOpen}
+                          >
+                            <span className="role-select-value">{pendingRolesSummary(pendingRoles)}</span>
+                            <span className="role-select-chevron" aria-hidden="true">▾</span>
+                          </button>
+                          {roleDropdownOpen && (
+                            <ul className="role-dropdown-menu" role="listbox" aria-multiselectable="true">
+                              {SINGLE_ROLE_OPTIONS.map((opt) => {
+                                const selected = pendingRoles.includes(opt.value);
+                                return (
+                                  <li key={opt.value}>
+                                    <button
+                                      type="button"
+                                      role="option"
+                                      aria-selected={selected}
+                                      className={`role-dropdown-option${selected ? " selected" : ""}`}
+                                      onClick={() => togglePendingRole(opt.value)}
+                                    >
+                                      <span>{opt.icon} {opt.label}</span>
+                                      {selected && <span className="role-option-check">✓</span>}
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </div>
+                        <button className="btn-save-role" onClick={() => applyRoleChange(user.id, user)}>✓</button>
+                        <button className="btn-cancel-role" onClick={() => { setEditingRole(null); setRoleDropdownOpen(false); }}>✕</button>
                       </div>
                     ) : (
                       <span className={`role-pill ${user.isAdmin ? "admin" : "plain"}`}>
@@ -395,7 +465,12 @@ export default function UserManagementPage() {
                       {user.isAdmin && !protectedSuper && user.email !== currentUser?.email && (
                         <button
                           className="btn-action edit"
-                          onClick={() => { setEditingRole(user.id); setPendingRole(user.adminRole || "ALL"); }}
+                          onClick={() => {
+                            const roles = parseAdminRoles(user.adminRole || "ALL");
+                            setPendingRoles(roles.includes("ALL") ? ["ALL"] : roles);
+                            setEditingRole(user.id);
+                            setRoleDropdownOpen(true);
+                          }}
                         >
                           ✏️ Bedel Doorka
                         </button>
@@ -522,7 +597,7 @@ export default function UserManagementPage() {
         .btn-create-submit:disabled { opacity:0.6; cursor:not-allowed; }
 
         /* ── TABLE ──────────────────────── */
-        .users-table-wrap { background:var(--bg-card); border:1.5px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:0 8px 32px -12px rgba(0,0,0,0.06); }
+        .users-table-wrap { background:var(--bg-card); border:1.5px solid var(--border); border-radius:20px; overflow:visible; box-shadow:0 8px 32px -12px rgba(0,0,0,0.06); }
         .users-table { width:100%; border-collapse:collapse; text-align:left; }
         .users-table th { background:var(--bg-main); padding:18px 20px; font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; border-bottom:2px solid var(--border); letter-spacing:0.7px; }
         .users-table td { padding:18px 20px; border-bottom:1px solid var(--border); font-size:0.9rem; color:var(--text-main); vertical-align:middle; }
@@ -550,9 +625,31 @@ export default function UserManagementPage() {
         .role-pill.admin { background:rgba(99,102,241,0.1); color:#4f46e5; border-color:rgba(99,102,241,0.2); }
         .role-pill.plain { background:rgba(100,116,139,0.08); color:#64748b; border-color:rgba(100,116,139,0.15); }
 
-        /* Inline role editor */
-        .inline-role-editor { display:flex; align-items:center; gap:6px; }
-        .role-select { background:var(--bg-main); border:1.5px solid var(--indigo); border-radius:10px; padding:6px 10px; font-size:0.82rem; color:var(--text-main); outline:none; font-family:inherit; cursor:pointer; }
+        /* Inline role editor — dropdown sidii hore, laakiin multi-select */
+        .inline-role-editor { display:flex; align-items:flex-start; gap:6px; }
+        .role-dropdown { position:relative; min-width:210px; max-width:260px; }
+        .role-select-trigger {
+          width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+          background:var(--bg-main); border:1.5px solid var(--indigo); border-radius:10px;
+          padding:8px 12px; font-size:0.82rem; color:var(--text-main); cursor:pointer;
+          font-family:inherit; text-align:left;
+        }
+        .role-select-value { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+        .role-select-chevron { color:var(--text-muted); font-size:0.75rem; flex-shrink:0; }
+        .role-dropdown-menu {
+          position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:30;
+          margin:0; padding:4px; list-style:none;
+          background:var(--bg-card); border:1.5px solid var(--indigo); border-radius:10px;
+          box-shadow:0 10px 28px rgba(15,23,42,0.12);
+        }
+        .role-dropdown-option {
+          width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+          padding:9px 12px; border:none; border-radius:8px; background:transparent;
+          font-size:0.82rem; color:var(--text-main); cursor:pointer; font-family:inherit; text-align:left;
+        }
+        .role-dropdown-option:hover { background:rgba(99,102,241,0.08); }
+        .role-dropdown-option.selected { background:var(--indigo); color:#fff; font-weight:700; }
+        .role-option-check { font-size:0.78rem; font-weight:900; }
         .btn-save-role   { background:#059669; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-weight:800; cursor:pointer; font-size:0.85rem; }
         .btn-cancel-role { background:var(--bg-main); color:var(--text-muted); border:1.5px solid var(--border); border-radius:8px; padding:6px 10px; font-weight:800; cursor:pointer; font-size:0.85rem; }
         .btn-save-role:hover   { background:#047857; }

@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "react-hooks/set-state-in-effect": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react/no-unescaped-entities": "off",
       "@next/next/no-html-link-for-pages": "off",
       "@next/next/no-img-element": "off",
     },

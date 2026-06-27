@@ -2,7 +2,8 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { toAdminSessionUser } from "@/lib/admin-role";
 
 export const ADMIN_SESSION_COOKIE = "admin_session";
-const MAX_AGE_SEC = 60 * 60 * 24 * 7;
+/** Session token validity (8 hours) — cookie itself is browser-session unless user logged in. */
+const MAX_AGE_SEC = 60 * 60 * 8;
 
 export type AdminSessionPayload = {
   id: string;

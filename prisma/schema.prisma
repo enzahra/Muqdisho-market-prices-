@@ -32,7 +32,12 @@ model Item {
   name         String
   slug         String
   categoryId   String
-  currentPrice Float         @default(0)
+  currentPrice  Float         @default(0)
+  priceGu       Float?
+  priceXagaa    Float?
+  priceDayr     Float?
+  priceJiilaal  Float?
+  sortOrder     Int           @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   category     Category      @relation(fields: [categoryId], references: [id])

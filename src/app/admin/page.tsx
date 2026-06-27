@@ -2,31 +2,23 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { normalizeAdminRole, isAdminAccount } from "@/lib/admin-role";
+import { parseAdminRoles } from "@/lib/admin-role";
+import { verifyAdminAuth } from "@/lib/admin-client";
 
 export default function AdminRouter() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push("/admin-login");
-      return;
-    }
-
-    const currentUser = JSON.parse(storedUser);
-    if (!isAdminAccount(currentUser)) {
-      localStorage.removeItem('user');
-      router.push("/admin-login?error=Koontadaada%20ma%20laha%20xuquuqda%20Admin-ka.%20Fadlan%20ku%20gal%20akoon%20Admin%20ah.");
-      return;
-    }
-
-    const role = normalizeAdminRole(currentUser.adminRole);
-    if (role === "ALL") {
-      router.push("/admin/animals");
-    } else {
-      router.push(`/admin/${role}`);
-    }
+    (async () => {
+      const user = await verifyAdminAuth();
+      if (!user) {
+        router.push("/admin-login?error=" + encodeURIComponent("Fadlan geli email-kaaga iyo password-kaaga."));
+        return;
+      }
+      const roles = parseAdminRoles(user.adminRole);
+      const first = roles.includes("ALL") ? "animals" : roles[0];
+      router.push(`/admin/${first}`);
+    })();
   }, [router]);
 
   return (

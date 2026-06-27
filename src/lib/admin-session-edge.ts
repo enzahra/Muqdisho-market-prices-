@@ -1,4 +1,4 @@
-/** Edge-safe session parse for middleware (Web Crypto). */
+/** Edge-safe session parse for proxy (Web Crypto). */
 import type { AdminSessionPayload } from "@/lib/admin-session";
 
 const COOKIE_NAME = "admin_session";
