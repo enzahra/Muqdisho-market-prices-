@@ -60,7 +60,7 @@ export function ThemeToggle() {
         fontSize: '0.88rem',
         color: isDark ? '#e2e8f0' : '#334155',
       }}>
-        {isDark ? "Iftiin (Light)" : "Habeen (Dark)"}
+        {isDark ? "Iftiin (Light)" : "Madow (Dark)"}
       </span>
     </button>
   );
