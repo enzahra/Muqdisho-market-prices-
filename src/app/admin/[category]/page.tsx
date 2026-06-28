@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ElectricityCompanyLogo } from "@/components/ElectricityCompanyLogo";
 import { use } from "react";
 import { isSuperAdmin, canAccessCategory, canAdminModifyCategory, getAdminNavCategories } from "@/lib/admin-role";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastContainer, useToast } from "@/components/Toast";
 import { adminFetch, adminLogout, parseAdminJson, verifyAdminAuth } from "@/lib/admin-client";
 import { getDisplaySeason, getSeasonLabel, getPriceSeason, isLivestockCategory, PRICE_SEASONS, PRICE_SEASON_LABELS, type PriceSeason } from "@/lib/season";
-import { groupUtilityItems, isUtilityCategory, type UtilityCompanyGroup, type UtilityYearRate, electricityRateItemName, ELECTRICITY_RATES, getMissingElectricityRateItems, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getUtilityLogoVariant, getWaterCompanyDisplayName, getWaterCompanyLogo } from "@/lib/utility-rates";
+import { groupUtilityItems, isUtilityCategory, type UtilityCompanyGroup, type UtilityYearRate, electricityRateItemName, ELECTRICITY_RATES, getMissingElectricityRateItems, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getWaterCompanyDisplayName, getWaterCompanyLogo, getWaterLogoVariant } from "@/lib/utility-rates";
 
 const LEGACY_ANIMAL_BASE_DENY = [
   "Geelka", "Lo'da", "Ariga", "Geel", "Lo'", "Ari", "Ari'",
@@ -860,18 +861,26 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                                     <div>
                                                         {companyLogo ? (
                                                             <>
-                                                                <div className={`admin-utility-logo-frame variant-${getUtilityLogoVariant(companyLogo)} ${isWater ? "theme-water" : "theme-electricity"}`}>
-                                                                    <Image
-                                                                        src={companyLogo}
-                                                                        alt={isWater ? getWaterCompanyDisplayName(companyName) : getElectricityCompanyDisplayName(companyName)}
-                                                                        width={140}
-                                                                        height={80}
-                                                                        quality={95}
-                                                                        className="admin-utility-logo-img"
-                                                                    />
-                                                                </div>
                                                                 {isWater ? (
-                                                                    <p className={`water-company-display-name${companyLogo.includes("wabax") ? " water-company-display-name-caps" : ""}`}>
+                                                                    <div className={`admin-utility-logo-frame variant-${getWaterLogoVariant()} theme-water`}>
+                                                                        <Image
+                                                                            src={companyLogo}
+                                                                            alt={getWaterCompanyDisplayName(companyName)}
+                                                                            width={44}
+                                                                            height={44}
+                                                                            quality={95}
+                                                                            className="admin-utility-logo-img"
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <ElectricityCompanyLogo
+                                                                        src={companyLogo}
+                                                                        alt={getElectricityCompanyDisplayName(companyName)}
+                                                                        imgClassName="admin-utility-logo-img"
+                                                                    />
+                                                                )}
+                                                                {isWater ? (
+                                                                    <p className="water-company-display-name">
                                                                         {getWaterCompanyDisplayName(companyName)}
                                                                     </p>
                                                                 ) : null}
@@ -1273,6 +1282,11 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
         .admin-utility-logo-frame.variant-round .admin-utility-logo-img {
             width: 100% !important; height: 100% !important; max-width: none !important;
             border-radius: 50%; object-fit: cover;
+        }
+        .admin-utility-logo-frame.theme-water.variant-round .admin-utility-logo-img {
+            border-radius: 0;
+            object-fit: contain;
+            object-position: center;
         }
         .admin-utility-logo-frame.variant-wide {
             padding: 6px 12px; border-radius: 12px;

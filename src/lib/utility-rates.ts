@@ -105,9 +105,34 @@ export function getWaterCompanyDisplayName(companyName: string): string {
   if (name.includes("towfiiq") || name.includes("horumarinta")) {
     return "Shirkadda Horumarinta Biyaha Towfiiq";
   }
-  if (name.includes("wabax")) return "SHIRKADDA BIYA-GALINTA WABAX";
+  if (name.includes("wabax")) return "Shirkadda Biya-galinta Wabax";
   return companyName;
 }
+
+/** Utility bill: (current reading − last reading) × unit price */
+export function calcUtilityBill(currentReading: number, lastReading: number, unitPrice: number): number {
+  const usage = currentReading - lastReading;
+  if (usage < 0 || unitPrice <= 0) return 0;
+  return usage * unitPrice;
+}
+
+/** @deprecated Use calcUtilityBill */
+export function calcWaterBill(currentReading: number, lastReading: number, pricePerM3: number): number {
+  return calcUtilityBill(currentReading, lastReading, pricePerM3);
+}
+
+export function getWaterLogoVariant(): UtilityLogoVariant {
+  return "round";
+}
+
+export function getElectricityLogoVariant(): UtilityLogoVariant {
+  return "compact";
+}
+
+/** Fixed logo frame for all electricity companies (dashboard, admin, reports) */
+export const ELECTRICITY_LOGO_FRAME_CLASS = "electricity-logo-slot";
+export const ELECTRICITY_LOGO_WIDTH = 52;
+export const ELECTRICITY_LOGO_HEIGHT = 52;
 
 export type UtilityLogoVariant = "round" | "wide" | "wabax" | "compact";
 

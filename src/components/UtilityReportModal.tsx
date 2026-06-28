@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import { ElectricityCompanyLogo } from "@/components/ElectricityCompanyLogo";
 import {
   formatElectricityRateDisplay,
   getElectricityCompanyDisplayName,
   getUtilityCompanyLogo,
-  getUtilityLogoVariant,
   getWaterCompanyDisplayName,
+  getWaterLogoVariant,
   type UtilityCompanyView,
 } from "@/lib/utility-rates";
 
@@ -36,7 +37,6 @@ export function UtilityReportModal({
 
   const displayName = getDisplayName(company);
   const companyLogo = getUtilityCompanyLogo(company.name, company.isElectricity);
-  const logoVariant = companyLogo ? getUtilityLogoVariant(companyLogo) : null;
   const logoTheme = company.isElectricity ? "electricity" : "water";
 
   const printReport = (yearFilter: string | "all") => {
@@ -81,8 +81,8 @@ export function UtilityReportModal({
       : "<tr><th>Sanadka</th><th>Qiimaha (USD)</th><th>Cutubka</th></tr>";
 
     const logoBlock = companyLogo
-      ? `<div class="logo-frame logo-${logoTheme} logo-${logoVariant}">
-           <img src="${origin}${companyLogo}" alt="${displayName}" class="company-logo logo-${logoVariant}" />
+      ? `<div class="logo-frame logo-${logoTheme}${company.isElectricity ? " logo-slot-electricity" : " logo-round-water"}">
+           <img src="${origin}${companyLogo}" alt="${displayName}" class="company-logo" />
          </div>`
       : "";
 
@@ -101,14 +101,13 @@ export function UtilityReportModal({
     .meta { color: #64748b; font-size: 0.9rem; }
     .badge { display: inline-block; margin-top: 10px; padding: 6px 14px; border-radius: 999px; background: ${accent}18; color: ${accent}; font-weight: 700; font-size: 0.8rem; }
     .logo-frame { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
-    .logo-frame.logo-electricity { padding: 6px 12px; border-radius: 11px; background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border: 1px solid rgba(234, 179, 8, 0.22); box-shadow: 0 3px 10px rgba(234, 179, 8, 0.12); }
+    .logo-frame.logo-electricity { padding: 6px 10px; border-radius: 10px; background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border: 1px solid rgba(234, 179, 8, 0.22); box-shadow: 0 3px 10px rgba(234, 179, 8, 0.12); }
+    .logo-frame.logo-slot-electricity { width: 52px; height: 52px; padding: 8px; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px; box-sizing: border-box; }
     .logo-frame.logo-water { padding: 6px 12px; border-radius: 11px; background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border: 1px solid rgba(14, 165, 233, 0.18); box-shadow: 0 3px 10px rgba(14, 165, 233, 0.1); }
-    .logo-frame.logo-round { width: 52px; height: 52px; padding: 3px; border-radius: 50%; }
-    .company-logo { display: block; object-fit: contain; }
-    .company-logo.logo-wide { height: 36px; max-width: 96px; }
-    .company-logo.logo-compact { height: 28px; max-width: 110px; }
-    .company-logo.logo-wabax { height: 36px; max-width: 44px; object-position: center bottom; }
-    .company-logo.logo-round { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .logo-frame.logo-round-water { width: 52px; height: 52px; padding: 3px; border-radius: 50%; }
+    .company-logo { display: block; object-fit: contain; object-position: center; max-width: 100%; max-height: 100%; }
+    .logo-slot-electricity .company-logo { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+    .logo-round-water .company-logo { width: 100%; height: 100%; border-radius: 0; }
     table { width: 100%; border-collapse: collapse; margin-top: 24px; }
     th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background: #f8fafc; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; }
@@ -149,17 +148,25 @@ export function UtilityReportModal({
       <div className="report-modal" onClick={(e) => e.stopPropagation()}>
         <div className="report-modal-head">
           <div className="report-modal-title-row">
-            {companyLogo && logoVariant && (
-              <div className={`report-logo-frame variant-${logoVariant} theme-${logoTheme}`}>
+            {companyLogo && (
+              company.isElectricity ? (
+                <ElectricityCompanyLogo
+                  src={companyLogo}
+                  alt={displayName}
+                  imgClassName="report-logo-img"
+                />
+              ) : (
+              <div className={`report-logo-frame variant-${getWaterLogoVariant()} theme-water`}>
                 <Image
                   src={companyLogo}
                   alt={displayName}
-                  width={120}
-                  height={40}
+                  width={52}
+                  height={52}
                   quality={95}
                   className="report-logo-img"
                 />
               </div>
+              )
             )}
             <div>
               <p className="report-modal-brand">Warbixin / Reports</p>
@@ -280,6 +287,11 @@ export function UtilityReportModal({
           .report-logo-frame.variant-round :global(.report-logo-img) {
             width: 100% !important; height: 100% !important; max-width: none !important;
             border-radius: 50%; object-fit: cover;
+          }
+          .report-logo-frame.theme-water.variant-round :global(.report-logo-img) {
+            border-radius: 0;
+            object-fit: contain;
+            object-position: center;
           }
           .report-logo-frame.variant-wabax {
             padding: 4px 8px; border-radius: 10px;

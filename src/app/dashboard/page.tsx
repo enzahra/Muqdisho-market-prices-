@@ -9,7 +9,11 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTheme } from 'next-themes';
 import { LivestockReportModal } from '@/components/LivestockReportModal';
 import { UtilityReportModal } from '@/components/UtilityReportModal';
-import { buildUtilityCompanyViews, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getUtilityCompanyLogo, getUtilityLogoVariant, getWaterCompanyDisplayName, getWaterCompanyLogo, getUtilityUnit, isUtilityCategory, type UtilityCompanyView } from '@/lib/utility-rates';
+import { WaterBillCalculator } from '@/components/WaterBillCalculator';
+import { ElectricityBillCalculator } from '@/components/ElectricityBillCalculator';
+import { VisitorGuideModal } from '@/components/VisitorGuideModal';
+import { ElectricityCompanyLogo } from '@/components/ElectricityCompanyLogo';
+import { buildUtilityCompanyViews, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getUtilityCompanyLogo, getWaterCompanyDisplayName, getWaterCompanyLogo, getWaterLogoVariant, getUtilityUnit, isUtilityCategory, type UtilityCompanyView } from '@/lib/utility-rates';
 
 type AnimalGroupKey = 'geel' | 'lo' | 'ari';
 
@@ -89,6 +93,7 @@ export default function Dashboard() {
     const [timeframe, setTimeframe] = useState("1m");
     const [itemCatalog, setItemCatalog] = useState<Record<string, any>>({});
     const [reportOpen, setReportOpen] = useState(false);
+    const [guideOpen, setGuideOpen] = useState(false);
     const { resolvedTheme } = useTheme();
     const isDark = mounted && resolvedTheme === 'dark';
 
@@ -243,23 +248,6 @@ export default function Dashboard() {
         const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
     }, []);
-
-    const exportCSV = () => {
-        let csv = "Category,Item,Price\n";
-        categories.forEach(cat => {
-            cat.items.forEach((item: string) => {
-                const price = marketPrices[`${cat.id}_${item}`] ?? marketPrices[`${cat.id.toLowerCase()}_${item}`] ?? 'N/A';
-                csv += `"${cat.name}","${item}",${price}\n`;
-            });
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'market_report.csv';
-        a.click();
-        window.URL.revokeObjectURL(url);
-    };
 
     const getChartData = () => {
         if (!activeCategory || !selectedCategoryData) return [];
@@ -471,13 +459,21 @@ export default function Dashboard() {
                 </div>
                 <div className="sidebar-footer">
                     <ThemeToggle />
-                    <button onClick={exportCSV} className="btn-secondary" style={{ width: '100%', marginTop: '15px' }}>Download Report</button>
                 </div>
             </aside>
 
             <main className="main-content">
                 <div className="top-bar">
                     <div className="breadcrumb">Muqdisho Market Prices Dashboard</div>
+                    <button
+                        type="button"
+                        className="visitor-guide-btn"
+                        onClick={() => setGuideOpen(true)}
+                        aria-label="Fur hagaha booqdayaasha"
+                    >
+                        <span className="visitor-guide-btn-icon" aria-hidden="true">📘</span>
+                        Hagaha &amp; Tilmaamaha
+                    </button>
                     <div className="search-wrap">
                         <span className="search-icon">🔍</span>
                         <input 
@@ -737,20 +733,17 @@ export default function Dashboard() {
                                                     <>
                                                         <div className="electricity-card-head">
                                                             {companyLogo ? (
-                                                                <div className={`utility-logo-frame variant-${getUtilityLogoVariant(companyLogo)} theme-electricity`}>
-                                                                    <Image
-                                                                        src={companyLogo}
-                                                                        alt={getElectricityCompanyDisplayName(company.name)}
-                                                                        width={120}
-                                                                        height={40}
-                                                                        quality={95}
-                                                                        className="utility-logo-img"
-                                                                    />
-                                                                </div>
+                                                                <ElectricityCompanyLogo
+                                                                    src={companyLogo}
+                                                                    alt={getElectricityCompanyDisplayName(company.name)}
+                                                                />
                                                             ) : (
                                                                 <span className="electricity-fallback-name">{getElectricityCompanyDisplayName(company.name)}</span>
                                                             )}
-                                                            <span className="electricity-status-pill" style={{ color: trend.color }}>{trend.label}</span>
+                                                            <ElectricityBillCalculator
+                                                                companyName={getElectricityCompanyDisplayName(company.name)}
+                                                                rates={latestYear.rates}
+                                                            />
                                                         </div>
                                                         <ul className="electricity-rates-list">
                                                             {latestYear.rates.map((rate) => (
@@ -770,22 +763,25 @@ export default function Dashboard() {
                                                         <div className="water-card-head">
                                                             <div className="water-brand-block">
                                                                 {companyLogo ? (
-                                                                    <div className={`utility-logo-frame variant-${getUtilityLogoVariant(companyLogo)} theme-water`}>
+                                                                    <div className={`utility-logo-frame variant-${getWaterLogoVariant()} theme-water`}>
                                                                         <Image
                                                                             src={companyLogo}
                                                                             alt={getWaterCompanyDisplayName(company.name)}
-                                                                            width={120}
-                                                                            height={120}
+                                                                            width={44}
+                                                                            height={44}
                                                                             quality={95}
                                                                             className="utility-logo-img"
                                                                         />
                                                                     </div>
                                                                 ) : null}
-                                                                <span className={`water-company-title${companyLogo?.includes('wabax') ? ' water-company-title-caps' : ''}`}>
+                                                                <span className="water-company-title">
                                                                     {getWaterCompanyDisplayName(company.name)}
                                                                 </span>
                                                             </div>
-                                                            <span className="water-status-pill" style={{ color: trend.color }}>{trend.label}</span>
+                                                            <WaterBillCalculator
+                                                                companyName={getWaterCompanyDisplayName(company.name)}
+                                                                pricePerM3={company.latestPrice}
+                                                            />
                                                         </div>
                                                         <div className="water-rate-panel">
                                                             <div className="water-rate-row">
@@ -856,16 +852,24 @@ export default function Dashboard() {
                                 <div className="chart-header">
                                     <div className="chart-info report-info-with-logo">
                                         {selectedUtilityLogo && selectedUtilityCompany && (
-                                            <div className={`utility-logo-frame variant-${getUtilityLogoVariant(selectedUtilityLogo)} theme-${selectedUtilityCompany.isElectricity ? 'electricity' : 'water'} report-bar-logo`}>
+                                            selectedUtilityCompany.isElectricity ? (
+                                                <ElectricityCompanyLogo
+                                                    src={selectedUtilityLogo}
+                                                    alt={selectedSubItem || ''}
+                                                    className="report-bar-logo"
+                                                />
+                                            ) : (
+                                            <div className={`utility-logo-frame variant-${getWaterLogoVariant()} theme-water report-bar-logo`}>
                                                 <Image
                                                     src={selectedUtilityLogo}
                                                     alt={selectedSubItem || ''}
-                                                    width={120}
-                                                    height={40}
+                                                    width={44}
+                                                    height={44}
                                                     quality={95}
                                                     className="utility-logo-img"
                                                 />
                                             </div>
+                                            )
                                         )}
                                         <div>
                                             <h3>Warbixin / Reports</h3>
@@ -1151,8 +1155,8 @@ export default function Dashboard() {
                 .dashboard-layout { display: flex; height: 100vh; overflow: hidden; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); font-family: 'Inter', sans-serif; }
                 .pro-loader-screen { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px; color: #475569; font-weight: 700; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
                 .loader-orb { width: 56px; height: 56px; border-radius: 50%; border: 4px solid #e2e8f0; border-top-color: #3b82f6; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-                .sidebar { width: 280px; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 40px 24px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid rgba(255,255,255,0.05); box-shadow: 4px 0 24px rgba(0,0,0,0.05); z-index: 10; }
-                .sidebar-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 50px; }
+                .sidebar { width: 280px; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 20px 24px 32px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid rgba(255,255,255,0.05); box-shadow: 4px 0 24px rgba(0,0,0,0.05); z-index: 10; }
+                .sidebar-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
                 .logo-image-wrap :global(img) { border-radius: 8px; background: #fff; padding: 2px; object-fit: contain; }
                 .logo-text h2 { font-size: 1.25rem; font-weight: 900; margin: 0; color: #fff; letter-spacing: -0.5px; }
                 .logo-text p { font-size: 0.75rem; color: #94a3b8; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
@@ -1160,8 +1164,24 @@ export default function Dashboard() {
                 .side-link { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px; border: 1px solid transparent; background: transparent; color: #94a3b8; font-weight: 700; cursor: pointer; transition: all 0.3s ease; width: 100%; text-align: left; font-size: 0.95rem; }
                 .side-link:hover { background: rgba(255,255,255,0.05); color: #fff; transform: translateX(5px); }
                 .side-link.active { background: linear-gradient(90deg, rgba(56,189,248,0.1) 0%, rgba(56,189,248,0) 100%); color: #38bdf8; border-left: 4px solid #38bdf8; border-radius: 0 14px 14px 0; }
-                .main-content { flex: 1; padding: 40px; overflow-y: auto; box-sizing: border-box; min-height: 0; scroll-behavior: smooth; }
-                .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(15, 23, 42, 0.05); }
+                .main-content { flex: 1; padding: 12px 40px 40px; overflow-y: auto; box-sizing: border-box; min-height: 0; scroll-behavior: smooth; }
+                .top-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(15, 23, 42, 0.05); }
+                .visitor-guide-btn {
+                    display: inline-flex; align-items: center; gap: 8px;
+                    padding: 8px 16px; border-radius: 999px;
+                    border: 1.5px solid rgba(14, 165, 233, 0.35);
+                    background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+                    color: #0369a1; font-size: 0.78rem; font-weight: 800;
+                    letter-spacing: 0.02em; cursor: pointer; flex-shrink: 0;
+                    transition: all 0.2s ease; font-family: inherit;
+                    box-shadow: 0 2px 10px rgba(14, 165, 233, 0.12);
+                }
+                .visitor-guide-btn:hover {
+                    border-color: #0ea5e9; background: #e0f2fe;
+                    transform: translateY(-1px);
+                }
+                .visitor-guide-btn-icon { font-size: 1rem; line-height: 1; }
+                .search-wrap { margin-left: auto; }
                 .search-wrap { position: relative; display: flex; align-items: center; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 12px; padding: 6px 14px; width: 280px; transition: all 0.3s ease; }
                 .search-wrap:focus-within { border-color: #38bdf8; background: #fff; box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15); }
                 .search-icon { font-size: 0.95rem; color: #64748b; margin-right: 8px; user-select: none; }
@@ -1246,7 +1266,7 @@ export default function Dashboard() {
                 }
                 .electricity-card-head {
                     display: flex; align-items: center; justify-content: space-between;
-                    gap: 8px; margin-bottom: 10px;
+                    gap: 8px; margin-bottom: 10px; min-height: 52px;
                 }
                 .utility-logo-frame {
                     display: inline-flex; align-items: center; justify-content: center;
@@ -1261,6 +1281,11 @@ export default function Dashboard() {
                 .utility-logo-frame.variant-round .utility-logo-img {
                     width: 100% !important; height: 100% !important; max-width: none !important;
                     border-radius: 50%; object-fit: cover;
+                }
+                .utility-logo-frame.theme-water.variant-round .utility-logo-img {
+                    border-radius: 0;
+                    object-fit: contain;
+                    object-position: center;
                 }
                 .utility-logo-frame.variant-wide {
                     padding: 5px 10px; border-radius: 11px;
@@ -1362,14 +1387,12 @@ export default function Dashboard() {
                     gap: 8px; margin-bottom: 10px;
                 }
                 .water-brand-block {
-                    display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;
+                    display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;
                 }
                 .water-company-title {
                     font-size: 0.62rem; font-weight: 800; color: #0f172a;
                     line-height: 1.35; letter-spacing: 0.01em;
-                }
-                .water-company-title-caps {
-                    font-size: 0.58rem; letter-spacing: 0.04em; text-transform: uppercase;
+                    flex: 1; min-width: 0;
                 }
                 .water-fallback-name {
                     font-size: 0.72rem; font-weight: 800; color: #0f172a;
@@ -1459,6 +1482,11 @@ export default function Dashboard() {
                 .chart-tooltip-change { font-size: 0.7rem; font-weight: 900; padding: 4px 8px; border-radius: 8px; color: #64748b; background: #f8fafc; }
 
                 :global(html.dark) .dashboard-layout { background: linear-gradient(135deg, #0b0f19 0%, #1e293b 100%); }
+                :global(html.dark) .visitor-guide-btn {
+                    background: rgba(14, 165, 233, 0.12);
+                    border-color: rgba(56, 189, 248, 0.35);
+                    color: #7dd3fc;
+                }
                 :global(html.dark) .breadcrumb { color: #94a3b8; }
                 :global(html.dark) .top-bar { border-bottom-color: rgba(148, 163, 184, 0.15); }
                 :global(html.dark) .content-header h1 { color: #f8fafc; }
@@ -1515,7 +1543,10 @@ export default function Dashboard() {
                     .dashboard-layout { flex-direction: column; height: auto; min-height: 100vh; }
                     .sidebar { width: 100%; padding: 20px; gap: 16px; }
                     .sidebar-logo { margin-bottom: 18px; }
-                    .main-content { padding: 24px 18px; }
+                    .main-content { padding: 10px 18px 24px; }
+                    .top-bar { flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+                    .visitor-guide-btn { font-size: 0.72rem; padding: 7px 12px; order: 3; width: 100%; justify-content: center; }
+                    .search-wrap { width: 100%; order: 2; margin-left: 0; }
                     .dash-layout-inner { grid-template-columns: 1fr; gap: 24px; }
                     .right-col { order: -1; }
                     .content-header h1,
@@ -1561,6 +1592,8 @@ export default function Dashboard() {
                     company={selectedUtilityCompany}
                 />
             )}
+
+            <VisitorGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
         </div>
     );
 }
