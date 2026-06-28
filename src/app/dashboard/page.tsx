@@ -76,11 +76,8 @@ function getMarketInsightTitle(animalType: string | null, category: string | nul
 }
 
 type FeatureBanner = {
-    theme: 'water' | 'electricity' | 'livestock';
     image: string;
-    badge: string;
     title: string;
-    subtitle: string;
     imagePosition?: string;
 };
 
@@ -88,30 +85,21 @@ function getFeatureBanner(category: string | null): FeatureBanner {
     const id = category?.toLowerCase() ?? '';
     if (id.includes('water')) {
         return {
-            theme: 'water',
             image: '/images/water-somalia.png',
-            badge: '💧 Biyaha',
             title: 'Biyaha Muqdisho',
-            subtitle: 'Qiimaha rasmiga ah ee shirkadaha biyaha',
             imagePosition: 'center 35%',
         };
     }
     if (id.includes('electricity')) {
         return {
-            theme: 'electricity',
             image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1470&auto=format&fit=crop',
-            badge: '⚡ Korontada',
             title: 'Korontada Muqdisho',
-            subtitle: 'Qiimaha rasmiga ah ee shirkadaha korontada',
             imagePosition: 'center center',
         };
     }
     return {
-        theme: 'livestock',
         image: '/images/market-news.jpg',
-        badge: '🐄 Xoolaha',
         title: 'Suuqa Xoolaha',
-        subtitle: 'Qiimaha rasmiga ah ee Geel, Lo\' & Ari\'',
         imagePosition: 'center center',
     };
 }
@@ -1079,7 +1067,7 @@ export default function Dashboard() {
                         {(() => {
                             const banner = getFeatureBanner(activeCategory);
                             return (
-                                <div className={`feature-banner theme-${banner.theme}`}>
+                                <div className="feature-banner">
                                     <div className="feature-banner-frame">
                                         <div className="feature-banner-img">
                                             <Image
@@ -1091,12 +1079,6 @@ export default function Dashboard() {
                                                 className="feature-banner-photo"
                                                 style={{ objectPosition: banner.imagePosition ?? 'center center' }}
                                             />
-                                        </div>
-                                        <div className="feature-banner-gradient" aria-hidden="true" />
-                                        <div className="feature-banner-content">
-                                            <span className="feature-banner-badge">{banner.badge}</span>
-                                            <h3 className="feature-banner-title">{banner.title}</h3>
-                                            <p className="feature-banner-sub">{banner.subtitle}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1296,100 +1278,18 @@ export default function Dashboard() {
                 .feature-banner-frame {
                     position: relative;
                     height: 268px;
-                    border-radius: 0;
+                    border-radius: 16px;
                     overflow: hidden;
                     border: none;
-                    box-shadow: none;
-                    transition: transform 0.35s ease;
-                }
-                .feature-banner:hover .feature-banner-frame {
-                    transform: none;
-                    box-shadow: none;
-                }
-                .feature-banner.theme-water .feature-banner-frame,
-                .feature-banner.theme-electricity .feature-banner-frame,
-                .feature-banner.theme-livestock .feature-banner-frame {
-                    border: none;
-                    box-shadow: none;
-                }
-                .feature-banner.theme-water:hover .feature-banner-frame {
                     box-shadow: none;
                 }
                 .feature-banner-img {
                     position: absolute;
                     inset: 0;
-                    background: #0f172a;
+                    background: #f1f5f9;
                 }
                 .feature-banner :global(.feature-banner-photo) {
                     object-fit: cover;
-                    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-                }
-                .feature-banner:hover :global(.feature-banner-photo) {
-                    transform: none;
-                }
-                .feature-banner-gradient {
-                    position: absolute;
-                    inset: 0;
-                    background:
-                        linear-gradient(180deg, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.15) 40%, rgba(15, 23, 42, 0.82) 100%);
-                    pointer-events: none;
-                }
-                .feature-banner.theme-water .feature-banner-gradient {
-                    background:
-                        linear-gradient(180deg, rgba(2, 132, 199, 0.05) 0%, rgba(15, 23, 42, 0.2) 45%, rgba(7, 47, 73, 0.88) 100%);
-                }
-                .feature-banner.theme-electricity .feature-banner-gradient {
-                    background:
-                        linear-gradient(180deg, rgba(217, 119, 6, 0.08) 0%, rgba(15, 23, 42, 0.25) 45%, rgba(69, 26, 3, 0.88) 100%);
-                }
-                .feature-banner-content {
-                    position: absolute;
-                    inset: auto 0 0 0;
-                    z-index: 2;
-                    padding: 22px 20px 20px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                }
-                .feature-banner-badge {
-                    align-self: flex-start;
-                    padding: 5px 12px;
-                    border-radius: 999px;
-                    font-size: 0.68rem;
-                    font-weight: 800;
-                    letter-spacing: 0.04em;
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.25);
-                }
-                .feature-banner.theme-water .feature-banner-badge {
-                    background: rgba(14, 165, 233, 0.35);
-                    color: #e0f2fe;
-                }
-                .feature-banner.theme-electricity .feature-banner-badge {
-                    background: rgba(234, 179, 8, 0.35);
-                    color: #fef9c3;
-                }
-                .feature-banner.theme-livestock .feature-banner-badge {
-                    background: rgba(22, 163, 74, 0.35);
-                    color: #dcfce7;
-                }
-                .feature-banner-title {
-                    margin: 0;
-                    font-size: 1.25rem;
-                    font-weight: 900;
-                    color: #fff;
-                    letter-spacing: -0.02em;
-                    line-height: 1.15;
-                    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-                }
-                .feature-banner-sub {
-                    margin: 0;
-                    font-size: 0.78rem;
-                    font-weight: 600;
-                    color: rgba(255, 255, 255, 0.88);
-                    line-height: 1.45;
-                    max-width: 260px;
                 }
                 .pro-sidebar-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border-radius: 28px; padding: 30px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05); }
                 .stats-card.stats-water {
@@ -1749,8 +1649,7 @@ export default function Dashboard() {
                     .chart-tabs button { padding: 8px 10px; font-size: 0.75rem; }
                     .animal-nav-row { gap: 10px; margin-bottom: 8px; }
                     .animal-detail-card { min-height: 160px; padding: 20px 18px !important; }
-                    .feature-banner-frame { height: 220px; border-radius: 0; }
-                    .feature-banner-title { font-size: 1.1rem; }
+                    .feature-banner-frame { height: 220px; border-radius: 14px; }
                 }
             `}</style>
 
