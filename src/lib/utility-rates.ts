@@ -73,6 +73,7 @@ export function getElectricityCompanyLogo(companyName: string): string | null {
   const name = companyName.toLowerCase();
   if (name.includes("beco")) return "/images/electricity/beco.png";
   if (name.includes("muqdisho") || name.includes("mogadishu")) return "/images/electricity/mogadishu-power.png";
+  if (name.includes("blue sky") || name.includes("bluesky")) return "/images/electricity/blue-sky.png";
   return null;
 }
 
@@ -87,6 +88,18 @@ export function getUtilityCompanyLogo(companyName: string, isElectricity: boolea
   return isElectricity ? getElectricityCompanyLogo(companyName) : getWaterCompanyLogo(companyName);
 }
 
+export function getElectricityCompanyDisplayName(companyName: string): string {
+  const name = companyName.toLowerCase();
+  if (name.includes("blue sky") || name.includes("bluesky")) {
+    return "Shirkada Korontada Blue Sky";
+  }
+  if (name.includes("beco")) return "Shirkada Korontada Beco";
+  if (name.includes("muqdisho") || name.includes("mogadishu")) {
+    return "Shirkada Korontada Muqdisho Power";
+  }
+  return companyName;
+}
+
 export function getWaterCompanyDisplayName(companyName: string): string {
   const name = companyName.toLowerCase();
   if (name.includes("towfiiq") || name.includes("horumarinta")) {
@@ -99,7 +112,7 @@ export function getWaterCompanyDisplayName(companyName: string): string {
 export type UtilityLogoVariant = "round" | "wide" | "wabax" | "compact";
 
 export function getUtilityLogoVariant(logoPath: string): UtilityLogoVariant {
-  if (logoPath.includes("towfiiq")) return "round";
+  if (logoPath.includes("towfiiq") || logoPath.includes("blue-sky")) return "round";
   if (logoPath.includes("wabax")) return "wabax";
   if (logoPath.includes("mogadishu")) return "wide";
   return "compact";
@@ -265,8 +278,52 @@ export function buildUtilityCompanyViews(
   prices: Record<string, number | string | undefined>
 ): UtilityCompanyView[] {
   const grouped = groupUtilityItems(items, slug, prices);
+  ensureDefaultUtilityYears(grouped, slug);
   return Object.keys(grouped)
     .filter((name) => !name.includes("|"))
     .sort((a, b) => a.localeCompare(b, "so"))
     .map((name) => toCompanyView(name, grouped[name], slug === "electricity"));
+}
+
+const DEFAULT_WATER_PRICES: Record<string, number> = {
+  towfiiq: 1.4,
+  wabax: 1.5,
+};
+
+function defaultWaterPrice(companyName: string, fallback = 0): number {
+  const lower = companyName.toLowerCase();
+  for (const [key, price] of Object.entries(DEFAULT_WATER_PRICES)) {
+    if (lower.includes(key)) return price;
+  }
+  return fallback;
+}
+
+/** Legacy DB rows (company only, no year items) — show defaults on dashboard */
+function ensureDefaultUtilityYears(
+  grouped: Record<string, UtilityCompanyGroup>,
+  slug: string
+) {
+  const year = String(new Date().getFullYear());
+  for (const [companyName, group] of Object.entries(grouped)) {
+    if (group.years.length > 0) continue;
+
+    if (slug === "electricity" && group.companyItem) {
+      const yearEntry: UtilityYearRate = { year, itemName: "", price: 0, rates: [] };
+      fillElectricityYearRates(yearEntry, companyName);
+      group.years.push(yearEntry);
+      continue;
+    }
+
+    if (slug === "water" && group.companyItem) {
+      const price =
+        Number(group.companyItem.currentPrice) ||
+        defaultWaterPrice(companyName, 0.8);
+      group.years.push({
+        year,
+        itemName: `${companyName} (${year})`,
+        price,
+        rates: [],
+      });
+    }
+  }
 }

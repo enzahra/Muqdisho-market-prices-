@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastContainer, useToast } from "@/components/Toast";
 import { adminFetch, adminLogout, parseAdminJson, verifyAdminAuth } from "@/lib/admin-client";
 import { getDisplaySeason, getSeasonLabel, getPriceSeason, isLivestockCategory, PRICE_SEASONS, PRICE_SEASON_LABELS, type PriceSeason } from "@/lib/season";
-import { groupUtilityItems, isUtilityCategory, type UtilityCompanyGroup, type UtilityYearRate, electricityRateItemName, ELECTRICITY_RATES, getMissingElectricityRateItems, getElectricityCompanyLogo, getUtilityLogoVariant, getWaterCompanyDisplayName, getWaterCompanyLogo } from "@/lib/utility-rates";
+import { groupUtilityItems, isUtilityCategory, type UtilityCompanyGroup, type UtilityYearRate, electricityRateItemName, ELECTRICITY_RATES, getMissingElectricityRateItems, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getUtilityLogoVariant, getWaterCompanyDisplayName, getWaterCompanyLogo } from "@/lib/utility-rates";
 
 const LEGACY_ANIMAL_BASE_DENY = [
   "Geelka", "Lo'da", "Ariga", "Geel", "Lo'", "Ari", "Ari'",
@@ -863,7 +863,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                                                 <div className={`admin-utility-logo-frame variant-${getUtilityLogoVariant(companyLogo)} ${isWater ? "theme-water" : "theme-electricity"}`}>
                                                                     <Image
                                                                         src={companyLogo}
-                                                                        alt={isWater ? getWaterCompanyDisplayName(companyName) : companyName}
+                                                                        alt={isWater ? getWaterCompanyDisplayName(companyName) : getElectricityCompanyDisplayName(companyName)}
                                                                         width={140}
                                                                         height={80}
                                                                         quality={95}
@@ -878,7 +878,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                                             </>
                                                         ) : (
                                                             <h4 className="admin-group-title">
-                                                                {isWater ? getWaterCompanyDisplayName(companyName) : companyName}
+                                                                {isWater ? getWaterCompanyDisplayName(companyName) : getElectricityCompanyDisplayName(companyName)}
                                                             </h4>
                                                         )}
                                                         <p className="utility-company-sub">

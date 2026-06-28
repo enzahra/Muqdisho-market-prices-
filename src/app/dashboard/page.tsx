@@ -9,7 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTheme } from 'next-themes';
 import { LivestockReportModal } from '@/components/LivestockReportModal';
 import { UtilityReportModal } from '@/components/UtilityReportModal';
-import { buildUtilityCompanyViews, getElectricityCompanyLogo, getUtilityCompanyLogo, getUtilityLogoVariant, getWaterCompanyDisplayName, getWaterCompanyLogo, getUtilityUnit, isUtilityCategory, type UtilityCompanyView } from '@/lib/utility-rates';
+import { buildUtilityCompanyViews, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getUtilityCompanyLogo, getUtilityLogoVariant, getWaterCompanyDisplayName, getWaterCompanyLogo, getUtilityUnit, isUtilityCategory, type UtilityCompanyView } from '@/lib/utility-rates';
 
 type AnimalGroupKey = 'geel' | 'lo' | 'ari';
 
@@ -740,7 +740,7 @@ export default function Dashboard() {
                                                                 <div className={`utility-logo-frame variant-${getUtilityLogoVariant(companyLogo)} theme-electricity`}>
                                                                     <Image
                                                                         src={companyLogo}
-                                                                        alt={company.name}
+                                                                        alt={getElectricityCompanyDisplayName(company.name)}
                                                                         width={120}
                                                                         height={40}
                                                                         quality={95}
@@ -748,7 +748,7 @@ export default function Dashboard() {
                                                                     />
                                                                 </div>
                                                             ) : (
-                                                                <span className="electricity-fallback-name">{company.name}</span>
+                                                                <span className="electricity-fallback-name">{getElectricityCompanyDisplayName(company.name)}</span>
                                                             )}
                                                             <span className="electricity-status-pill" style={{ color: trend.color }}>{trend.label}</span>
                                                         </div>

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   formatElectricityRateDisplay,
+  getElectricityCompanyDisplayName,
   getUtilityCompanyLogo,
   getUtilityLogoVariant,
   getWaterCompanyDisplayName,
@@ -19,7 +20,7 @@ type Props = {
 };
 
 function getDisplayName(company: UtilityCompanyView): string {
-  if (company.isElectricity) return company.name;
+  if (company.isElectricity) return getElectricityCompanyDisplayName(company.name);
   return getWaterCompanyDisplayName(company.name);
 }
 

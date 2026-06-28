@@ -14,6 +14,7 @@
     "db:restore": "node restore-db.js",
     "db:seed": "npx prisma db seed",
     "db:seed-livestock": "node prisma/seed-livestock.js",
+    "db:seed-utilities": "node prisma/seed-utilities.js",
     "db:super-admin": "node scripts/ensure-super-admin.js"
   },
   "dependencies": {
