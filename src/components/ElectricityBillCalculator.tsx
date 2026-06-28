@@ -92,10 +92,14 @@ export function ElectricityBillCalculator({ companyName, rates }: ElectricityBil
         </div>
 
         <div className="uc-section">
-          <span className="uc-section-label">Akhriska mitirka</span>
+          <span className="uc-section-label">Akhriska mitirka korontada</span>
+          <p className="uc-section-hint">
+            Ka eeg mitirka korontada — waa tiro ku qoran kWh. CR waa lambarka hadda, LR waa lambarka bill-kii hore.
+          </p>
           <div className="uc-fields">
             <label className="uc-field">
-              <span>CR — Akhriska hadda</span>
+              <span>CR — Lambarka mitirka HADDA</span>
+              <small className="uc-field-hint">Current Reading · akhriska maanta / bill-ka cusub</small>
               <input
                 type="number"
                 min={0}
@@ -107,7 +111,8 @@ export function ElectricityBillCalculator({ companyName, rates }: ElectricityBil
               />
             </label>
             <label className="uc-field">
-              <span>LR — Akhriskii hore</span>
+              <span>LR — Lambarka mitirka HORE</span>
+              <small className="uc-field-hint">Last Reading · akhriskii bill-kii hore</small>
               <input
                 type="number"
                 min={0}
@@ -129,7 +134,7 @@ export function ElectricityBillCalculator({ companyName, rates }: ElectricityBil
         ) : null}
 
         {cr.trim() !== "" && lr.trim() !== "" && crNum < lrNum ? (
-          <p className="uc-error">CR waa inuu ka weyn yahay ama la mid yahay LR</p>
+          <p className="uc-error">Lambarka hadda (CR) waa inuu ka weyn yahay ama la mid yahay kan hore (LR)</p>
         ) : null}
 
         {hasValidInputs && usage !== null && total !== null ? (

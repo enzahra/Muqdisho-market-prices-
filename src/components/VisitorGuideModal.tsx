@@ -21,6 +21,8 @@ type Slide = {
   steps: string[];
   tip?: string;
   image?: string;
+  /** Sharax CR/LR — mitirka biyaha ama korontada */
+  meterUnit?: "m³" | "kWh";
 };
 
 const SLIDES: Slide[] = [
@@ -82,11 +84,13 @@ const SLIDES: Slide[] = [
     steps: [
       "Dooro shirkadda biyaha",
       "Riix «Xisaabi»",
-      "Geli CR (hadda) iyo LR (hore)",
-      "Biilka = (CR − LR) × qiimaha",
+      "Geli lambarka mitirka HADDA (CR)",
+      "Geli lambarka mitirka HORE (LR)",
+      "Biilka = (CR − LR) × qiimaha biyaha",
     ],
     image: "/images/guide/03-biyaha.png",
-    tip: "Tusaale: CR=150, LR=120 → 30 m³ × qiimaha = biilkaaga",
+    meterUnit: "m³",
+    tip: "Tusaale: CR=150, LR=120 → 30 m³ la isticmaalay × qiimaha = biilkaaga",
   },
   {
     id: "electricity",
@@ -99,10 +103,12 @@ const SLIDES: Slide[] = [
     steps: [
       "Dooro shirkadda korontada",
       "Riix «Xisaabi» + dooro noocaaga",
-      "Geli CR iyo LR mitirka",
+      "Geli lambarka mitirka HADDA (CR)",
+      "Geli lambarka mitirka HORE (LR)",
       "Biilka = (CR − LR) × qiimaha kWh",
     ],
     image: "/images/guide/05-korontada.png",
+    meterUnit: "kWh",
   },
   {
     id: "report",
@@ -131,6 +137,7 @@ const SLIDES: Slide[] = [
       "🔍 Raadi — sanduuqa «Raadi...» kore",
       "🌙 Beddel mugdi/iftiin — hoos sidebar-ka",
       "💲 Qiimayaasha waa kuwa rasmiga ah ee nidaamka",
+      "📊 CR = lambarka mitirka hadda · LR = lambarka mitirka hore",
     ],
     tip: "Dib u fur hagahan markaad u baahato.",
   },
@@ -240,6 +247,37 @@ export function VisitorGuideModal({ open, onClose }: VisitorGuideModalProps) {
               </div>
             </div>
           ) : null}
+
+          {slide.meterUnit && (
+            <div className="hg-meter-box" style={{ borderColor: `${slide.color}35` }}>
+              <p className="hg-meter-title" style={{ color: slide.color }}>
+                Maxay CR iyo LR yihiin?
+              </p>
+              <div className="hg-meter-rows">
+                <div className="hg-meter-row">
+                  <span className="hg-meter-badge hg-meter-cr">CR</span>
+                  <div>
+                    <strong>Lambarka mitirka HADDA</strong>
+                    <small>
+                      Current Reading — tiro mitirku muujinayo <em>maanta</em> ama bill-ka cusub ({slide.meterUnit})
+                    </small>
+                  </div>
+                </div>
+                <div className="hg-meter-row">
+                  <span className="hg-meter-badge hg-meter-lr">LR</span>
+                  <div>
+                    <strong>Lambarka mitirka HORE</strong>
+                    <small>
+                      Last Reading — tiro mitirku ahaa markii <em>bill-kii hore</em> la qaaday ({slide.meterUnit})
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <p className="hg-meter-formula">
+                Isticmaalka = CR − LR &nbsp;→&nbsp; Biilka = Isticmaalka × qiimaha
+              </p>
+            </div>
+          )}
 
           <ul className="hg-list">
             {slide.steps.map((text, i) => (
@@ -457,6 +495,65 @@ export function VisitorGuideModal({ open, onClose }: VisitorGuideModalProps) {
         .hg-tile-green strong { color: #15803d; }
         .hg-tile-blue strong { color: #0369a1; }
         .hg-tile-gold strong { color: #b45309; }
+        .hg-meter-box {
+          margin-bottom: 16px;
+          padding: 14px 16px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.92);
+          border: 2px solid;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+        }
+        .hg-meter-title {
+          margin: 0 0 12px;
+          font-size: 0.82rem;
+          font-weight: 900;
+          text-align: center;
+        }
+        .hg-meter-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+        .hg-meter-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .hg-meter-badge {
+          flex-shrink: 0;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          display: grid;
+          place-items: center;
+          font-size: 0.72rem;
+          font-weight: 900;
+          color: #fff;
+        }
+        .hg-meter-cr { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+        .hg-meter-lr { background: linear-gradient(135deg, #64748b, #94a3b8); }
+        .hg-meter-row strong {
+          display: block;
+          font-size: 0.82rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin-bottom: 2px;
+        }
+        .hg-meter-row small {
+          display: block;
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #64748b;
+          line-height: 1.45;
+        }
+        .hg-meter-row small em { font-style: normal; font-weight: 800; color: #475569; }
+        .hg-meter-formula {
+          margin: 0;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: #f8fafc;
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #334155;
+          text-align: center;
+          line-height: 1.5;
+        }
         .hg-list {
           list-style: none;
           margin: 0;
@@ -551,6 +648,9 @@ export function VisitorGuideModal({ open, onClose }: VisitorGuideModalProps) {
         html.dark .hg-sub { color: #94a3b8; }
         html.dark .hg-list li { background: rgba(15,23,42,0.5); border-color: rgba(255,255,255,0.08); color: #e2e8f0; }
         html.dark .hg-tip { background: rgba(15,23,42,0.4); }
+        html.dark .hg-meter-box { background: rgba(15,23,42,0.55); }
+        html.dark .hg-meter-row strong { color: #f1f5f9; }
+        html.dark .hg-meter-formula { background: rgba(15,23,42,0.6); color: #cbd5e1; }
         html.dark .hg-x { background: #334155; color: #cbd5e1; }
         html.dark .hg-btn-back { background: #334155; border-color: #475569; color: #cbd5e1; }
         html.dark .hg-foot { border-color: #334155; }

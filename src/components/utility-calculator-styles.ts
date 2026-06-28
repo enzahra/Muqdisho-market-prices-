@@ -11,6 +11,13 @@ export const UTILITY_CALC_SECTION_STYLES = `
     text-transform: uppercase;
     color: #94a3b8;
   }
+  .uc-section-hint {
+    margin: -4px 0 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #64748b;
+  }
   .uc-fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -29,6 +36,13 @@ export const UTILITY_CALC_SECTION_STYLES = `
     font-size: 0.75rem;
     font-weight: 700;
     color: #475569;
+  }
+  .uc-field-hint {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #94a3b8;
+    line-height: 1.35;
+    margin-top: -2px;
   }
   .uc-field input {
     width: 100%;
