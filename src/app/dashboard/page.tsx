@@ -1037,11 +1037,11 @@ export default function Dashboard() {
                             {(() => {
                                 const currentId = activeCategory?.toLowerCase();
                                 let newsImg = "/images/market-news.jpg";
-                                if (currentId?.includes("water")) newsImg = "https://images.unsplash.com/photo-1568487007364-175e0d26233b?q=80&w=1471&auto=format&fit=crop";
+                                if (currentId?.includes("water")) newsImg = "/images/water-somalia.png";
                                 else if (currentId?.includes("electricity")) newsImg = "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1470&auto=format&fit=crop";
                                 return (
                                     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                                        <Image src={newsImg} alt="Market News" fill sizes="(max-width: 1024px) 100vw, 320px" priority={true} style={{ objectFit: 'cover' }} />
+                                        <Image src={newsImg} alt={currentId?.includes("water") ? "Biyaha Muqdisho" : "Market News"} fill sizes="(max-width: 1024px) 100vw, 320px" priority={true} style={{ objectFit: 'cover' }} />
                                     </div>
                                 );
                             })()}
