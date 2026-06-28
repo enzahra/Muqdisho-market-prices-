@@ -63,6 +63,8 @@ function getAnimalDetailPageTitle(animalType: string): string {
 }
 
 function getMarketInsightTitle(animalType: string | null, category: string | null): string {
+    if (category === 'water') return 'Heerka is badalka suuq biyaha';
+    if (category === 'electricity') return 'Heerka is badalka suuq korontada';
     if (category === 'animals' && animalType) {
         const lower = animalType.toLowerCase();
         if (lower.includes('geel')) return 'Heerka is badalka suuq Geela';
@@ -71,6 +73,47 @@ function getMarketInsightTitle(animalType: string | null, category: string | nul
     }
     if (category === 'animals') return 'Heerka is badalka suuq xoolaha';
     return 'Heerka is badalka suuq xoolaha';
+}
+
+type FeatureBanner = {
+    theme: 'water' | 'electricity' | 'livestock';
+    image: string;
+    badge: string;
+    title: string;
+    subtitle: string;
+    imagePosition?: string;
+};
+
+function getFeatureBanner(category: string | null): FeatureBanner {
+    const id = category?.toLowerCase() ?? '';
+    if (id.includes('water')) {
+        return {
+            theme: 'water',
+            image: '/images/water-somalia.png',
+            badge: '💧 Biyaha',
+            title: 'Biyaha Muqdisho',
+            subtitle: 'Qiimaha rasmiga ah ee shirkadaha biyaha',
+            imagePosition: 'center 35%',
+        };
+    }
+    if (id.includes('electricity')) {
+        return {
+            theme: 'electricity',
+            image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1470&auto=format&fit=crop',
+            badge: '⚡ Korontada',
+            title: 'Korontada Muqdisho',
+            subtitle: 'Qiimaha rasmiga ah ee shirkadaha korontada',
+            imagePosition: 'center center',
+        };
+    }
+    return {
+        theme: 'livestock',
+        image: '/images/market-news.jpg',
+        badge: '🐄 Xoolaha',
+        title: 'Suuqa Xoolaha',
+        subtitle: 'Qiimaha rasmiga ah ee Geel, Lo\' & Ari\'',
+        imagePosition: 'center center',
+    };
 }
 
 export default function Dashboard() {
@@ -1033,20 +1076,34 @@ export default function Dashboard() {
                     </div>
 
                     <div className="right-col">
-                        <div className="news-card">
-                            {(() => {
-                                const currentId = activeCategory?.toLowerCase();
-                                let newsImg = "/images/market-news.jpg";
-                                if (currentId?.includes("water")) newsImg = "/images/water-somalia.png";
-                                else if (currentId?.includes("electricity")) newsImg = "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1470&auto=format&fit=crop";
-                                return (
-                                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                                        <Image src={newsImg} alt={currentId?.includes("water") ? "Biyaha Muqdisho" : "Market News"} fill sizes="(max-width: 1024px) 100vw, 320px" priority={true} style={{ objectFit: 'cover' }} />
+                        {(() => {
+                            const banner = getFeatureBanner(activeCategory);
+                            return (
+                                <div className={`feature-banner theme-${banner.theme}`}>
+                                    <div className="feature-banner-frame">
+                                        <div className="feature-banner-img">
+                                            <Image
+                                                src={banner.image}
+                                                alt={banner.title}
+                                                fill
+                                                sizes="(max-width: 1024px) 100vw, 320px"
+                                                priority
+                                                className="feature-banner-photo"
+                                                style={{ objectPosition: banner.imagePosition ?? 'center center' }}
+                                            />
+                                        </div>
+                                        <div className="feature-banner-gradient" aria-hidden="true" />
+                                        <div className="feature-banner-content">
+                                            <span className="feature-banner-badge">{banner.badge}</span>
+                                            <h3 className="feature-banner-title">{banner.title}</h3>
+                                            <p className="feature-banner-sub">{banner.subtitle}</p>
+                                        </div>
+                                        <div className="feature-banner-accent" aria-hidden="true" />
                                     </div>
-                                );
-                            })()}
-                        </div>
-                        <div className="pro-sidebar-card stats-card">
+                                </div>
+                            );
+                        })()}
+                        <div className={`pro-sidebar-card stats-card${activeCategory === 'water' ? ' stats-water' : activeCategory === 'electricity' ? ' stats-electricity' : ''}`}>
                             <div className="pro-side-header">{getMarketInsightTitle(selectedAnimalType, activeCategory)}</div>
                             <div className="mini-stats">
                                 <div className="m-stat-item"><span>Is badalka hadda</span><span className="m-stat-val" style={{ color: marketVolumeKey === 'high' ? '#10b981' : '#64748b' }}>{currentMarketVolume}</span></div>
@@ -1235,12 +1292,138 @@ export default function Dashboard() {
                 .amt { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 900; color: #0f172a; letter-spacing: -1.5px; }
                 .unit { font-size: clamp(0.75rem, 2vw, 0.85rem); color: #94a3b8; font-weight: 700; }
                 .card-foot-line { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; opacity: 0.8; }
-                .right-col { display: flex; flex-direction: column; gap: 35px; }
-                .news-card { background: #000; border-radius: 28px; overflow: hidden; height: 220px; position: relative; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.2); }
-                .news-card :global(img) { object-fit: cover; opacity: 0.85; transition: transform 0.5s ease; }
-                .news-card:hover :global(img) { transform: scale(1.05); }
-                .news-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 100%); pointer-events: none; }
+                .right-col { display: flex; flex-direction: column; gap: 24px; }
+                .feature-banner { position: relative; }
+                .feature-banner-frame {
+                    position: relative;
+                    height: 268px;
+                    border-radius: 24px;
+                    overflow: hidden;
+                    box-shadow: 0 20px 50px -16px rgba(15, 23, 42, 0.28);
+                    transition: transform 0.35s ease, box-shadow 0.35s ease;
+                }
+                .feature-banner:hover .feature-banner-frame {
+                    transform: translateY(-3px);
+                    box-shadow: 0 28px 60px -18px rgba(15, 23, 42, 0.35);
+                }
+                .feature-banner.theme-water .feature-banner-frame {
+                    box-shadow: 0 20px 50px -16px rgba(2, 132, 199, 0.35);
+                    border: 2px solid rgba(56, 189, 248, 0.35);
+                }
+                .feature-banner.theme-water:hover .feature-banner-frame {
+                    box-shadow: 0 28px 60px -14px rgba(2, 132, 199, 0.45);
+                }
+                .feature-banner.theme-electricity .feature-banner-frame {
+                    border: 2px solid rgba(234, 179, 8, 0.35);
+                    box-shadow: 0 20px 50px -16px rgba(217, 119, 6, 0.3);
+                }
+                .feature-banner.theme-livestock .feature-banner-frame {
+                    border: 2px solid rgba(22, 163, 74, 0.25);
+                }
+                .feature-banner-img {
+                    position: absolute;
+                    inset: 0;
+                    background: #0f172a;
+                }
+                .feature-banner :global(.feature-banner-photo) {
+                    object-fit: cover;
+                    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+                }
+                .feature-banner:hover :global(.feature-banner-photo) {
+                    transform: scale(1.06);
+                }
+                .feature-banner-gradient {
+                    position: absolute;
+                    inset: 0;
+                    background:
+                        linear-gradient(180deg, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.15) 40%, rgba(15, 23, 42, 0.82) 100%);
+                    pointer-events: none;
+                }
+                .feature-banner.theme-water .feature-banner-gradient {
+                    background:
+                        linear-gradient(180deg, rgba(2, 132, 199, 0.05) 0%, rgba(15, 23, 42, 0.2) 45%, rgba(7, 47, 73, 0.88) 100%);
+                }
+                .feature-banner.theme-electricity .feature-banner-gradient {
+                    background:
+                        linear-gradient(180deg, rgba(217, 119, 6, 0.08) 0%, rgba(15, 23, 42, 0.25) 45%, rgba(69, 26, 3, 0.88) 100%);
+                }
+                .feature-banner-content {
+                    position: absolute;
+                    inset: auto 0 0 0;
+                    z-index: 2;
+                    padding: 22px 20px 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+                .feature-banner-badge {
+                    align-self: flex-start;
+                    padding: 5px 12px;
+                    border-radius: 999px;
+                    font-size: 0.68rem;
+                    font-weight: 800;
+                    letter-spacing: 0.04em;
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.25);
+                }
+                .feature-banner.theme-water .feature-banner-badge {
+                    background: rgba(14, 165, 233, 0.35);
+                    color: #e0f2fe;
+                }
+                .feature-banner.theme-electricity .feature-banner-badge {
+                    background: rgba(234, 179, 8, 0.35);
+                    color: #fef9c3;
+                }
+                .feature-banner.theme-livestock .feature-banner-badge {
+                    background: rgba(22, 163, 74, 0.35);
+                    color: #dcfce7;
+                }
+                .feature-banner-title {
+                    margin: 0;
+                    font-size: 1.25rem;
+                    font-weight: 900;
+                    color: #fff;
+                    letter-spacing: -0.02em;
+                    line-height: 1.15;
+                    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+                }
+                .feature-banner-sub {
+                    margin: 0;
+                    font-size: 0.78rem;
+                    font-weight: 600;
+                    color: rgba(255, 255, 255, 0.88);
+                    line-height: 1.45;
+                    max-width: 260px;
+                }
+                .feature-banner-accent {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    z-index: 3;
+                }
+                .feature-banner.theme-water .feature-banner-accent {
+                    background: linear-gradient(90deg, #0ea5e9, #38bdf8, #7dd3fc);
+                }
+                .feature-banner.theme-electricity .feature-banner-accent {
+                    background: linear-gradient(90deg, #f59e0b, #fbbf24, #fde047);
+                }
+                .feature-banner.theme-livestock .feature-banner-accent {
+                    background: linear-gradient(90deg, #16a34a, #4ade80, #86efac);
+                }
                 .pro-sidebar-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border-radius: 28px; padding: 30px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05); }
+                .stats-card.stats-water {
+                    border-color: rgba(14, 165, 233, 0.2);
+                    background: linear-gradient(160deg, rgba(255,255,255,0.95) 0%, rgba(240,249,255,0.9) 100%);
+                    box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.12);
+                }
+                .stats-card.stats-electricity {
+                    border-color: rgba(234, 179, 8, 0.2);
+                    background: linear-gradient(160deg, rgba(255,255,255,0.95) 0%, rgba(255,251,235,0.9) 100%);
+                    box-shadow: 0 10px 30px -10px rgba(234, 179, 8, 0.12);
+                }
                 .pro-side-header { font-size: 0.75rem; font-weight: 900; color: #64748b; letter-spacing: 2px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
                 .pro-side-header::after { content: ''; flex: 1; height: 1px; background: rgba(15, 23, 42, 0.1); }
                 .mini-stats { display: flex; flex-direction: column; gap: 20px; }
@@ -1539,6 +1722,8 @@ export default function Dashboard() {
                 :global(html.dark) .animal-group-heading { color: #f8fafc; }
                 :global(html.dark) .selected-group-title { color: #f8fafc; }
                 :global(html.dark) .pro-sidebar-card { background: #0f172a !important; border-color: #334155 !important; }
+                :global(html.dark) .stats-card.stats-water { background: linear-gradient(160deg, #0f172a 0%, #0c2233 100%) !important; border-color: rgba(56, 189, 248, 0.25) !important; }
+                :global(html.dark) .stats-card.stats-electricity { background: linear-gradient(160deg, #0f172a 0%, #1a1508 100%) !important; border-color: rgba(234, 179, 8, 0.25) !important; }
                 :global(html.dark) .pro-side-header { color: #94a3b8; }
                 :global(html.dark) .pro-side-header::after { background: rgba(148, 163, 184, 0.2); }
                 :global(html.dark) .m-stat-item { color: #94a3b8; border-bottom-color: rgba(148, 163, 184, 0.15); }
@@ -1586,7 +1771,8 @@ export default function Dashboard() {
                     .chart-tabs button { padding: 8px 10px; font-size: 0.75rem; }
                     .animal-nav-row { gap: 10px; margin-bottom: 8px; }
                     .animal-detail-card { min-height: 160px; padding: 20px 18px !important; }
-                    .news-card { height: 190px; border-radius: 18px; }
+                    .feature-banner-frame { height: 220px; border-radius: 20px; }
+                    .feature-banner-title { font-size: 1.1rem; }
                 }
             `}</style>
 
