@@ -1098,7 +1098,6 @@ export default function Dashboard() {
                                             <h3 className="feature-banner-title">{banner.title}</h3>
                                             <p className="feature-banner-sub">{banner.subtitle}</p>
                                         </div>
-                                        <div className="feature-banner-accent" aria-hidden="true" />
                                     </div>
                                 </div>
                             );
@@ -1297,28 +1296,24 @@ export default function Dashboard() {
                 .feature-banner-frame {
                     position: relative;
                     height: 268px;
-                    border-radius: 24px;
+                    border-radius: 0;
                     overflow: hidden;
-                    box-shadow: 0 20px 50px -16px rgba(15, 23, 42, 0.28);
-                    transition: transform 0.35s ease, box-shadow 0.35s ease;
+                    border: none;
+                    box-shadow: none;
+                    transition: transform 0.35s ease;
                 }
                 .feature-banner:hover .feature-banner-frame {
-                    transform: translateY(-3px);
-                    box-shadow: 0 28px 60px -18px rgba(15, 23, 42, 0.35);
+                    transform: none;
+                    box-shadow: none;
                 }
-                .feature-banner.theme-water .feature-banner-frame {
-                    box-shadow: 0 20px 50px -16px rgba(2, 132, 199, 0.35);
-                    border: 2px solid rgba(56, 189, 248, 0.35);
+                .feature-banner.theme-water .feature-banner-frame,
+                .feature-banner.theme-electricity .feature-banner-frame,
+                .feature-banner.theme-livestock .feature-banner-frame {
+                    border: none;
+                    box-shadow: none;
                 }
                 .feature-banner.theme-water:hover .feature-banner-frame {
-                    box-shadow: 0 28px 60px -14px rgba(2, 132, 199, 0.45);
-                }
-                .feature-banner.theme-electricity .feature-banner-frame {
-                    border: 2px solid rgba(234, 179, 8, 0.35);
-                    box-shadow: 0 20px 50px -16px rgba(217, 119, 6, 0.3);
-                }
-                .feature-banner.theme-livestock .feature-banner-frame {
-                    border: 2px solid rgba(22, 163, 74, 0.25);
+                    box-shadow: none;
                 }
                 .feature-banner-img {
                     position: absolute;
@@ -1330,7 +1325,7 @@ export default function Dashboard() {
                     transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
                 }
                 .feature-banner:hover :global(.feature-banner-photo) {
-                    transform: scale(1.06);
+                    transform: none;
                 }
                 .feature-banner-gradient {
                     position: absolute;
@@ -1395,23 +1390,6 @@ export default function Dashboard() {
                     color: rgba(255, 255, 255, 0.88);
                     line-height: 1.45;
                     max-width: 260px;
-                }
-                .feature-banner-accent {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 4px;
-                    z-index: 3;
-                }
-                .feature-banner.theme-water .feature-banner-accent {
-                    background: linear-gradient(90deg, #0ea5e9, #38bdf8, #7dd3fc);
-                }
-                .feature-banner.theme-electricity .feature-banner-accent {
-                    background: linear-gradient(90deg, #f59e0b, #fbbf24, #fde047);
-                }
-                .feature-banner.theme-livestock .feature-banner-accent {
-                    background: linear-gradient(90deg, #16a34a, #4ade80, #86efac);
                 }
                 .pro-sidebar-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border-radius: 28px; padding: 30px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05); }
                 .stats-card.stats-water {
@@ -1771,7 +1749,7 @@ export default function Dashboard() {
                     .chart-tabs button { padding: 8px 10px; font-size: 0.75rem; }
                     .animal-nav-row { gap: 10px; margin-bottom: 8px; }
                     .animal-detail-card { min-height: 160px; padding: 20px 18px !important; }
-                    .feature-banner-frame { height: 220px; border-radius: 20px; }
+                    .feature-banner-frame { height: 220px; border-radius: 0; }
                     .feature-banner-title { font-size: 1.1rem; }
                 }
             `}</style>
