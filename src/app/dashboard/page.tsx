@@ -13,6 +13,7 @@ import { WaterBillCalculator } from '@/components/WaterBillCalculator';
 import { ElectricityBillCalculator } from '@/components/ElectricityBillCalculator';
 import { VisitorGuideModal } from '@/components/VisitorGuideModal';
 import { ElectricityCompanyLogo } from '@/components/ElectricityCompanyLogo';
+import { BookOpen } from 'lucide-react';
 import { buildUtilityCompanyViews, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getUtilityCompanyLogo, getWaterCompanyDisplayName, getWaterCompanyLogo, getWaterLogoVariant, getUtilityUnit, isUtilityCategory, type UtilityCompanyView } from '@/lib/utility-rates';
 
 type AnimalGroupKey = 'geel' | 'lo' | 'ari';
@@ -469,10 +470,13 @@ export default function Dashboard() {
                         type="button"
                         className="visitor-guide-btn"
                         onClick={() => setGuideOpen(true)}
-                        aria-label="Fur hagaha booqdayaasha"
+                        aria-label="Fur hagaha isticmaalka"
                     >
-                        <span className="visitor-guide-btn-icon" aria-hidden="true">📘</span>
-                        Hagaha &amp; Tilmaamaha
+                        <span className="visitor-guide-btn-glow" aria-hidden="true" />
+                        <span className="visitor-guide-btn-icon-wrap" aria-hidden="true">
+                            <BookOpen size={17} strokeWidth={2.3} />
+                        </span>
+                        <span className="visitor-guide-btn-label">Hagaha &amp; Tilmaamaha</span>
                     </button>
                     <div className="search-wrap">
                         <span className="search-icon">🔍</span>
@@ -1167,20 +1171,54 @@ export default function Dashboard() {
                 .main-content { flex: 1; padding: 12px 40px 40px; overflow-y: auto; box-sizing: border-box; min-height: 0; scroll-behavior: smooth; }
                 .top-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(15, 23, 42, 0.05); }
                 .visitor-guide-btn {
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 8px 16px; border-radius: 999px;
-                    border: 1.5px solid rgba(14, 165, 233, 0.35);
-                    background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
-                    color: #0369a1; font-size: 0.78rem; font-weight: 800;
-                    letter-spacing: 0.02em; cursor: pointer; flex-shrink: 0;
-                    transition: all 0.2s ease; font-family: inherit;
-                    box-shadow: 0 2px 10px rgba(14, 165, 233, 0.12);
+                    position: relative;
+                    display: inline-flex; align-items: center; gap: 10px;
+                    padding: 9px 18px 9px 10px;
+                    border-radius: 999px;
+                    border: none;
+                    cursor: pointer; flex-shrink: 0;
+                    font-family: inherit;
+                    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 55%, #8b5cf6 100%);
+                    color: #fff;
+                    box-shadow:
+                        0 4px 18px rgba(99, 102, 241, 0.4),
+                        0 0 0 1px rgba(255,255,255,0.15) inset;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    overflow: hidden;
                 }
                 .visitor-guide-btn:hover {
-                    border-color: #0ea5e9; background: #e0f2fe;
-                    transform: translateY(-1px);
+                    transform: translateY(-2px);
+                    box-shadow:
+                        0 8px 28px rgba(99, 102, 241, 0.5),
+                        0 0 0 1px rgba(255,255,255,0.2) inset;
                 }
-                .visitor-guide-btn-icon { font-size: 1rem; line-height: 1; }
+                .visitor-guide-btn:active { transform: translateY(0); }
+                .visitor-guide-btn-glow {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.22) 50%, transparent 60%);
+                    animation: guideShimmer 3s ease-in-out infinite;
+                    pointer-events: none;
+                }
+                @keyframes guideShimmer {
+                    0%, 100% { transform: translateX(-120%); }
+                    50% { transform: translateX(120%); }
+                }
+                .visitor-guide-btn-icon-wrap {
+                    display: flex; align-items: center; justify-content: center;
+                    width: 32px; height: 32px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.2);
+                    backdrop-filter: blur(4px);
+                    flex-shrink: 0;
+                    position: relative; z-index: 1;
+                }
+                .visitor-guide-btn-label {
+                    position: relative; z-index: 1;
+                    font-size: 0.8rem; font-weight: 800;
+                    letter-spacing: 0.01em; line-height: 1;
+                    white-space: nowrap;
+                }
                 .search-wrap { margin-left: auto; }
                 .search-wrap { position: relative; display: flex; align-items: center; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 12px; padding: 6px 14px; width: 280px; transition: all 0.3s ease; }
                 .search-wrap:focus-within { border-color: #38bdf8; background: #fff; box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15); }
@@ -1483,9 +1521,9 @@ export default function Dashboard() {
 
                 :global(html.dark) .dashboard-layout { background: linear-gradient(135deg, #0b0f19 0%, #1e293b 100%); }
                 :global(html.dark) .visitor-guide-btn {
-                    background: rgba(14, 165, 233, 0.12);
-                    border-color: rgba(56, 189, 248, 0.35);
-                    color: #7dd3fc;
+                    box-shadow:
+                        0 4px 22px rgba(99, 102, 241, 0.55),
+                        0 0 0 1px rgba(255,255,255,0.1) inset;
                 }
                 :global(html.dark) .breadcrumb { color: #94a3b8; }
                 :global(html.dark) .top-bar { border-bottom-color: rgba(148, 163, 184, 0.15); }
@@ -1545,7 +1583,8 @@ export default function Dashboard() {
                     .sidebar-logo { margin-bottom: 18px; }
                     .main-content { padding: 10px 18px 24px; }
                     .top-bar { flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
-                    .visitor-guide-btn { font-size: 0.72rem; padding: 7px 12px; order: 3; width: 100%; justify-content: center; }
+                    .visitor-guide-btn { padding: 10px 16px; order: 3; width: 100%; justify-content: center; }
+                    .visitor-guide-btn-label { font-size: 0.78rem; }
                     .search-wrap { width: 100%; order: 2; margin-left: 0; }
                     .dash-layout-inner { grid-template-columns: 1fr; gap: 24px; }
                     .right-col { order: -1; }
