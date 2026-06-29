@@ -4,13 +4,15 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ElectricityCompanyLogo } from "@/components/ElectricityCompanyLogo";
+import { AdminLivestockReportPanel } from "@/components/AdminLivestockReportPanel";
+import { AdminUtilityReportPanel } from "@/components/AdminUtilityReportPanel";
 import { use } from "react";
 import { isSuperAdmin, canAccessCategory, canAdminModifyCategory, getAdminNavCategories } from "@/lib/admin-role";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastContainer, useToast } from "@/components/Toast";
 import { adminFetch, adminLogout, parseAdminJson, verifyAdminAuth } from "@/lib/admin-client";
 import { getDisplaySeason, getSeasonLabel, getPriceSeason, isLivestockCategory, PRICE_SEASONS, PRICE_SEASON_LABELS, type PriceSeason } from "@/lib/season";
-import { groupUtilityItems, isUtilityCategory, type UtilityCompanyGroup, type UtilityYearRate, electricityRateItemName, ELECTRICITY_RATES, getMissingElectricityRateItems, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getWaterCompanyDisplayName, getWaterCompanyLogo, getWaterLogoVariant } from "@/lib/utility-rates";
+import { groupUtilityItems, isUtilityCategory, type UtilityCompanyGroup, type UtilityYearRate, electricityRateItemName, ELECTRICITY_RATES, getMissingElectricityRateItems, getElectricityCompanyDisplayName, getElectricityCompanyLogo, getWaterCompanyDisplayName, getWaterCompanyLogo, getWaterLogoVariant, getAdminUtilityEntries } from "@/lib/utility-rates";
 
 const LEGACY_ANIMAL_BASE_DENY = [
   "Geelka", "Lo'da", "Ariga", "Geel", "Lo'", "Ari", "Ari'",
@@ -57,6 +59,14 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
   const [auditHasMore, setAuditHasMore] = useState(false);
   const [auditLoadingMore, setAuditLoadingMore] = useState(false);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [utilityCompanies, setUtilityCompanies] = useState<any[]>([]);
+  const [livestockReportOpen, setLivestockReportOpen] = useState(false);
+  const [utilityReportOpen, setUtilityReportOpen] = useState(false);
+  const [utilityContact, setUtilityContact] = useState({
+    ceoPhone: "",
+    callCenterPhone: "",
+    address: "",
+  });
   const router = useRouter();
 
   const [initialPrices, setInitialPrices] = useState<any>({});
@@ -122,6 +132,30 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
       setPrices(pricesObj);
       setInitialPrices(pricesObj);
     } catch (err) { console.error(err); }
+  }, []);
+
+  const fetchUtilityCompanies = useCallback(async (slug?: string) => {
+    try {
+      const q = slug ? `?categorySlug=${encodeURIComponent(slug)}` : "";
+      const result = await parseAdminJson<any[]>(
+        await adminFetch(`/api/admin/utility-companies${q}`, { cache: "no-store" })
+      );
+      if (!result.ok) {
+        if (result.status === 401 || result.status === 403) {
+          await adminLogout();
+          window.location.href =
+            "/admin-login?error=" + encodeURIComponent(result.error || "Session-ka wuu dhacay.");
+          return [];
+        }
+        throw new Error(result.error || "Lama soo dejin karo shirkadaha");
+      }
+      const list = Array.isArray(result.data) ? result.data : [];
+      setUtilityCompanies(list);
+      return list;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   }, []);
 
   const createElectricityRateItem = useCallback(async (
@@ -193,6 +227,13 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
         }
         setUser(authed);
         await fetchCurrentPrices();
+        if (isUtilityCategory(categorySlug)) {
+          try {
+            await fetchUtilityCompanies(categorySlug);
+          } catch (err: any) {
+            showToast(err?.message || "Lama soo dejin karo shirkadaha diiwaangashan.", "error");
+          }
+        }
         if (categorySlug === "electricity") {
           const resp = await fetch("/api/prices", { cache: "no-store" });
           const data = await resp.json();
@@ -212,7 +253,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
     return () => {
       cancelled = true;
     };
-  }, [categorySlug, fetchCurrentPrices, fetchRecentLogs, syncMissingElectricityRates]);
+  }, [categorySlug, fetchCurrentPrices, fetchRecentLogs, fetchUtilityCompanies, syncMissingElectricityRates]);
 
 
   const handlePriceChange = (categorySlug: string, itemName: string, value: string, season?: PriceSeason) => {
@@ -240,9 +281,34 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
     }
   }, [dbCategories, categorySlug, selectedLivestockSlug]);
 
+  const mergeUtilityCompany = useCallback((company: any) => {
+    if (!company?.name || !company?.categorySlug) return;
+    setUtilityCompanies((prev) => {
+      const idx = prev.findIndex(
+        (c) =>
+          c.id === company.id ||
+          (c.name === company.name && c.categorySlug === company.categorySlug)
+      );
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...company };
+        return next;
+      }
+      return [...prev, company];
+    });
+  }, []);
+
   const addNewItem = async (categoryId: string) => {
     const name = newItemName[categoryId];
-    if (!name || name.trim() === "") return;
+    if (!name || name.trim() === "") {
+      showToast(
+        isUtilityCategory(categorySlug)
+          ? "Fadlan geli magaca shirkadda marka hore."
+          : "Fadlan geli magaca marka hore.",
+        "error"
+      );
+      return;
+    }
 
     try {
       const isLivestock = ['animals', 'geel', 'lo', 'ari'].includes(categorySlug);
@@ -280,6 +346,37 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
         setNewItemName(prev => ({ ...prev, [categoryId]: "" }));
         fetchCurrentPrices(); // Refresh list
       } else {
+        if (isUtilityCategory(categorySlug)) {
+          const regResp = await adminFetch("/api/admin/utility-companies", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: name.trim(),
+              categorySlug,
+              ceoPhone: utilityContact.ceoPhone,
+              callCenterPhone: utilityContact.callCenterPhone,
+              address: utilityContact.address,
+            }),
+          });
+          const regResult = await parseAdminJson(regResp);
+          if (!regResult.ok) {
+            throw new Error(regResult.error || "Lama diiwaangelin shirkadda");
+          }
+
+          if (regResult.data) {
+            mergeUtilityCompany(regResult.data);
+          }
+
+          showToast(
+            `"${name.trim()}" waa la diiwaangeliyay! Hadda ku dar sanadka qiimaha (➕ Ku dar Sanad).`,
+            "success"
+          );
+          setNewItemName(prev => ({ ...prev, [categoryId]: "" }));
+          setUtilityContact({ ceoPhone: "", callCenterPhone: "", address: "" });
+          await fetchUtilityCompanies(categorySlug);
+          return;
+        }
+
         const resp = await adminFetch('/api/admin/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -293,7 +390,9 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
         if (resp.ok) {
           showToast(`"${name}" waa la daray!`, "success");
           setNewItemName(prev => ({ ...prev, [categoryId]: "" }));
-          fetchCurrentPrices(); // Refresh list
+          setUtilityContact({ ceoPhone: "", callCenterPhone: "", address: "" });
+          fetchCurrentPrices();
+          if (isUtilityCategory(categorySlug)) fetchUtilityCompanies(categorySlug);
         } else {
           const errResult = await parseAdminJson(resp);
           throw new Error(errResult.error || "Lama dari karo");
@@ -351,6 +450,9 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
       showToast(`Sanadka ${year} waa la daray!`, "success");
       setNewYearRate((prev) => ({ ...prev, [stateKey]: { year: "", price: "" } }));
       await fetchCurrentPrices();
+      if (isUtilityCategory(categorySlugKey)) {
+        await fetchUtilityCompanies(categorySlugKey);
+      }
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -412,8 +514,25 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
           throw new Error(errResult.error || `Lama tirtiri karo "${entry.name}"`);
         }
       }
+
+      const reg = utilityCompanies.find(
+        (c) => c.name === companyName && c.categorySlug === categorySlugKey
+      );
+      if (reg?.id) {
+        const delReg = await adminFetch("/api/admin/utility-companies", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: reg.id }),
+        });
+        if (!delReg.ok) {
+          const errResult = await parseAdminJson(delReg);
+          throw new Error(errResult.error || "Lama tirtiri karo diiwaanka shirkadda");
+        }
+      }
+
       showToast(`"${companyName}" waa la tirtiray!`, "success");
-      fetchCurrentPrices();
+      await fetchCurrentPrices();
+      await fetchUtilityCompanies(categorySlugKey);
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -620,6 +739,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                 <div className="theme-toggle-wrap">
                   <ThemeToggle />
                 </div>
+                <button onClick={() => router.push('/admin')} className="btn-secondary">Admin Panel</button>
                 <button onClick={() => router.push('/dashboard')} className="btn-secondary">Ku noqo Dashboard-ka</button>
             </div>
         </div>
@@ -630,7 +750,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
             <header className="pro-header-group">
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <h1>{categorySlug === 'animals' ? 'Sicirka rasmiga ah ee xoolaha' : categorySlug === 'water' ? 'Sicirka rasmiga ah ee Biyaha muqdisho' : categorySlug === 'electricity' ? 'Sicirka rasmiga ah ee korontada muqdisho' : 'Admin Panel'}</h1>
+                        <h1>{categorySlug === 'animals' ? 'Sicirka Xoolaha' : categorySlug === 'water' ? 'Sicirka Biyaha' : categorySlug === 'electricity' ? 'Sicirka Korontada' : 'Admin Panel'}</h1>
                     </div>
                     {hasChanges && (
                         <div className="changes-indicator">
@@ -642,7 +762,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
 
             {(() => {
               const navCats = getAdminNavCategories(user?.adminRole ?? "ALL");
-              if (navCats.length <= 1) return null;
+              if (navCats.length === 0) return null;
               const labels: Record<string, string> = {
                 animals: "🐄 Xoolaha",
                 water: "💧 Biyaha",
@@ -702,6 +822,13 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                 {LIVESTOCK_TYPE_LABELS[cat.slug] ?? cat.name}
                             </button>
                         ))}
+                        <button
+                            type="button"
+                            className="btn-reports-tab"
+                            onClick={() => setLivestockReportOpen(true)}
+                        >
+                            📊 Warbixin
+                        </button>
                     </div>
 
                     {selectedLivestockSlug && (
@@ -836,16 +963,40 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                         .filter((groupName) => !useLivestockCascade || !selectedBreed || groupName === selectedBreed)
                         .map((groupName) => [groupName, groupedItems[groupName]] as [string, any[]]);
 
+                    const utilityEntries = isUtilityCategory(cat.slug)
+                        ? getAdminUtilityEntries(
+                            cat.items,
+                            cat.slug,
+                            prices,
+                            utilityCompanies,
+                            isSuperAdmin(user?.adminRole)
+                          )
+                        : [];
+
                     return (
                         <div key={cat.id} className="pro-cat-editor-card">
                             <div className="pro-cat-header">
                                 <span className="pro-cat-indicator"></span>
                                 <h3>{cat.name}</h3>
+                                {isUtilityCategory(cat.slug) && (
+                                    <button
+                                        type="button"
+                                        className="btn-reports-header"
+                                        onClick={() => setUtilityReportOpen(true)}
+                                    >
+                                        📊 Warbixin
+                                    </button>
+                                )}
                             </div>
                             
                             <div className="pro-grouped-container">
                                 {isUtilityCategory(cat.slug) ? (
-                                    Object.entries(groupUtilityItems(cat.items, cat.slug, prices)).map(([companyName, group]) => {
+                                    utilityEntries.length === 0 ? (
+                                        <p className="utility-empty-hint utility-list-empty">
+                                            Weli shirkad lama diiwaangelin — ku dar shirkad cusub hoose (➕ Add New).
+                                        </p>
+                                    ) : (
+                                    utilityEntries.map(([companyName, group]) => {
                                         const stateKey = `${cat.id}_${companyName}`;
                                         const yearDraft = newYearRate[stateKey] || { year: "", price: "" };
                                         const isElectricity = cat.slug === "electricity";
@@ -893,6 +1044,17 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                                         <p className="utility-company-sub">
                                                             {isElectricity ? "Sanad kasta: Home Guri, Laamo badan, Hal laan" : "Qiimaha sanadlaha ah ee shirkaddan"}
                                                         </p>
+                                                        {(() => {
+                                                            const meta = utilityCompanies.find((c) => c.name === companyName);
+                                                            if (!meta) return null;
+                                                            return (
+                                                                <div className="utility-contact-display">
+                                                                    <span>CEO: {meta.ceoPhone || "—"}</span>
+                                                                    <span>Call Center: {meta.callCenterPhone || "—"}</span>
+                                                                    <span>Cinwaanka: {meta.address || "—"}</span>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </div>
                                                     <button
                                                         type="button"
@@ -993,6 +1155,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                             </div>
                                         );
                                     })
+                                    )
                                 ) : (
                                 sortedGroups.map(([groupName, items]) => {
                                     // Sort Birimo before Sugunto
@@ -1096,6 +1259,28 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
                                         ➕ Add New
                                     </button>
                                 </div>
+                                {isUtilityCategory(cat.slug) && (
+                                    <div className="utility-contact-fields">
+                                        <input
+                                            type="tel"
+                                            placeholder="Telefoonka CEO"
+                                            value={utilityContact.ceoPhone}
+                                            onChange={(e) => setUtilityContact((p) => ({ ...p, ceoPhone: e.target.value }))}
+                                        />
+                                        <input
+                                            type="tel"
+                                            placeholder="Telefoonka Call Center"
+                                            value={utilityContact.callCenterPhone}
+                                            onChange={(e) => setUtilityContact((p) => ({ ...p, callCenterPhone: e.target.value }))}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Cinwaanka diiwaanka"
+                                            value={utilityContact.address}
+                                            onChange={(e) => setUtilityContact((p) => ({ ...p, address: e.target.value }))}
+                                        />
+                                    </div>
+                                )}
                                 {['animals', 'geel', 'lo', 'ari'].includes(cat.slug) && (
                                     <div className="livestock-add-options">
                                         <span className="options-title">Noocyada la abuurayo (Automatic Creation):</span>
@@ -1150,7 +1335,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
               <div className="pro-sidebar-card">
                    <div className="pro-side-header">ADMINISTRATION</div>
                    <button onClick={() => router.push('/admin/users')} className="btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }}>
-                      👥 User Management
+                      👥 Maamulidda Adminada
                    </button>
               </div>
             )}
@@ -1224,7 +1409,26 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
         .pro-cat-editor-card { background: var(--bg-card, #ffffff); border: 1.5px solid var(--border); border-radius: 20px; padding: 35px; margin-bottom: 35px; box-shadow: 0 10px 30px -15px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.02); transition: all 0.3s ease; }
         .pro-cat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding-bottom: 18px; border-bottom: 1.5px solid var(--border); }
         .pro-cat-indicator { width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); }
-        .pro-cat-header h3 { font-size: 1.2rem; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; }
+        .pro-cat-header h3 { flex: 1; font-size: 1.2rem; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; }
+        .btn-reports-header, .btn-reports-tab {
+          padding: 8px 16px; border-radius: 12px; border: 2px solid #2563eb; background: rgba(37,99,235,0.08);
+          color: #2563eb; font-weight: 800; font-size: 0.82rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+        }
+        .btn-reports-header:hover, .btn-reports-tab:hover {
+          background: #2563eb; color: #fff;
+        }
+        .livestock-type-tabs { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .utility-contact-fields {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;
+        }
+        .utility-contact-fields input {
+          border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem;
+          background: var(--bg-main); color: var(--text-main);
+        }
+        .utility-contact-display {
+          display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 8px; font-size: 0.78rem; color: var(--text-muted);
+        }
+        @media (max-width: 720px) { .utility-contact-fields { grid-template-columns: 1fr; } }
 
         .pro-inputs-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 28px; }
         .pro-input-node label { display: block; font-size: 0.8rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.8px; }
@@ -1330,6 +1534,7 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
         }
         .utility-company-sub { margin: 4px 0 0; font-size: 0.82rem; color: var(--text-muted); }
         .utility-empty-hint { margin: 0 0 16px; font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
+        .utility-list-empty { padding: 24px 16px; text-align: center; border: 1px dashed rgba(148, 163, 184, 0.45); border-radius: 14px; font-style: normal; font-weight: 600; }
         .utility-years-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .utility-add-year-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding-top: 16px; border-top: 1px dashed var(--border); }
         .utility-add-year-row input { flex: 1; min-width: 120px; height: 48px; background: var(--bg-card, #fff); border: 1.5px solid var(--border); border-radius: 12px; padding: 0 14px; font-size: 0.9rem; font-weight: 600; color: var(--text-main); outline: none; }
@@ -1523,6 +1728,32 @@ export default function AdminPage({ params }: { params: Promise<{ category: stri
           }
         }
       `}</style>
+
+      <AdminLivestockReportPanel
+        open={livestockReportOpen}
+        onClose={() => setLivestockReportOpen(false)}
+        dbCategories={dbCategories}
+        initialSlug={selectedLivestockSlug || "geel"}
+        initialBreed={selectedBreed}
+        viewAllData={isSuperAdmin(user?.adminRole ?? "")}
+        accent="#2563eb"
+      />
+
+      {(categorySlug === "water" || categorySlug === "electricity") && (
+        <AdminUtilityReportPanel
+          open={utilityReportOpen}
+          onClose={() => setUtilityReportOpen(false)}
+          categorySlug={categorySlug}
+          items={
+            dbCategories.find((c) => c.slug === categorySlug)?.items ?? []
+          }
+          prices={prices}
+          companies={utilityCompanies.filter((c) => c.categorySlug === categorySlug)}
+          viewAllCompanies={isSuperAdmin(user?.adminRole ?? "")}
+          accent={categorySlug === "water" ? "#0ea5e9" : "#eab308"}
+          unit={categorySlug === "water" ? "m³" : "kWh"}
+        />
+      )}
 
     </div>
   );

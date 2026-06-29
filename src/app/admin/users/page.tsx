@@ -276,7 +276,7 @@ export default function UserManagementPage() {
           </div>
           <div className="nav-actions">
             <div className="theme-toggle-wrap"><ThemeToggle /></div>
-            <button onClick={() => router.push("/admin/animals")} className="btn-back">
+            <button onClick={() => router.push("/admin")} className="btn-back">
               ← Admin Panel
             </button>
           </div>
@@ -557,7 +557,7 @@ export default function UserManagementPage() {
         .btn-create-toggle:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(99,102,241,0.4); }
 
         /* ── FLASH ──────────────────────── */
-        .status-banner { padding:14px 20px; border-radius:14px; margin-bottom:22px; font-weight:700; font-size:0.9rem; text-align:center; }
+        .status-banner { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 99999; padding:14px 20px; border-radius:14px; font-weight:700; font-size:0.9rem; text-align:center; width: min(420px, calc(100vw - 32px)); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18); pointer-events: auto; }
         .status-banner.ok  { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.25); }
         .status-banner.err { background:rgba(239,68,68,0.1);  color:#ef4444; border:1px solid rgba(239,68,68,0.25); }
 
